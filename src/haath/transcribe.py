@@ -1,0 +1,143 @@
+"""Speech → timestamped transcript with faster-whisper, plus a seekable playback copy.
+
+faster-whisper decodes webm/m4a/opus/mp3/wav itself through PyAV (FFmpeg libraries
+bundled in the wheel), so no separate ffmpeg install is needed.
+"""
+
+from __future__ import annotations
+
+import gc
+from collections.abc import Callable
+from pathlib import Path
+
+from haath.errors import HaathError
+from haath.models import Segment, Transcript, Word
+
+
+def pick_device() -> tuple[str, str]:
+    try:
+        import ctranslate2
+
+        if ctranslate2.get_cuda_device_count() > 0:
+            return "cuda", "float16"
+    except Exception:
+        pass
+    return "cpu", "int8"
+
+
+def whisper_cached(model_name: str) -> bool:
+    if Path(model_name).is_dir():
+        return True
+    try:
+        from faster_whisper.utils import download_model
+
+        download_model(model_name, local_files_only=True)
+        return True
+    except Exception:
+        return False
+
+
+def download_whisper(model_name: str) -> str:
+    from faster_whisper.utils import download_model
+
+    return download_model(model_name)
+
+
+def load_model(model_name: str):
+    try:
+        from faster_whisper import WhisperModel
+    except ImportError as e:
+        raise HaathError("faster-whisper is not installed.", "run: pip install faster-whisper   (or reinstall: uv tool install .)") from e
+    device, compute = pick_device()
+    try:
+        return WhisperModel(model_name, device=device, compute_type=compute, cpu_threads=0)
+    except Exception as e:
+        if device == "cuda":  # broken CUDA/cuDNN install: fall back to CPU rather than fail
+            return WhisperModel(model_name, device="cpu", compute_type="int8")
+        if not whisper_cached(model_name):
+            raise HaathError(
+                f"Whisper model '{model_name}' is not downloaded yet and could not be fetched ({e}).",
+                "connect to the internet once and run: haath doctor --download",
+            ) from e
+        raise HaathError(f"Could not load Whisper model '{model_name}': {e}", "try a smaller one: --whisper-model small") from e
+
+
+def transcribe(
+    audio: Path,
+    model_name: str,
+    lang: str | None = None,
+    progress: Callable[[float, str], None] | None = None,
+) -> Transcript:
+    model = load_model(model_name)
+    try:
+        try:
+            segments, info = model.transcribe(
+                str(audio),
+                language=lang or None,
+                task="transcribe",
+                beam_size=5,
+                word_timestamps=True,
+                vad_filter=True,  # skip the long silent stirring bits; timestamps stay absolute
+                vad_parameters={"min_silence_duration_ms": 700},
+                condition_on_previous_text=False,  # avoids repetition loops on 30+ min audio
+            )
+        except Exception as e:
+            raise HaathError(
+                f"Could not read the audio file {audio.name}: {e}",
+                "re-export it as .m4a, .mp3 or .wav from the phone and try again",
+            ) from e
+
+        duration = float(info.duration or 0.0)
+        out: list[Segment] = []
+        for seg in segments:  # generator: decoding happens here
+            words = [Word(start=round(w.start, 2), end=round(w.end, 2), word=w.word) for w in (seg.words or [])]
+            out.append(Segment(id=len(out), start=round(seg.start, 2), end=round(seg.end, 2), text=seg.text.strip(), words=words))
+            if progress and duration:
+                progress(min(0.99, seg.end / duration), f"listening… {int(seg.end // 60)}:{int(seg.end % 60):02d} of {int(duration // 60)}:{int(duration % 60):02d}")
+        return Transcript(
+            language=info.language or (lang or ""),
+            language_probability=round(float(info.language_probability or 0.0), 3),
+            duration=round(duration, 2),
+            whisper_model=model_name,
+            segments=[s for s in out if s.text],
+        )
+    finally:
+        # Free RAM for Gemma: Whisper and a 4B model at once is too much for many laptops.
+        del model
+        gc.collect()
+
+
+def make_playable(src: Path, dest: Path) -> Path:
+    """Browser MediaRecorder webm has no duration/cue index, so seeking (▶ from 1:23) is
+    unreliable. Re-encode once to AAC .m4a, which every browser (incl. iPhone) can seek.
+    Returns `src` unchanged if it is already a seekable format or conversion fails."""
+    if src.suffix.lower() in {".m4a", ".mp3", ".wav", ".aac"}:
+        return src
+    try:
+        import av
+
+        with av.open(str(src)) as inp:
+            in_stream = inp.streams.audio[0]
+            tmp = dest.with_name(f".{dest.name}.tmp")
+            with av.open(str(tmp), "w", format="ipod") as out:
+                rate = in_stream.codec_context.sample_rate or 48000
+                rate = rate if rate in (16000, 22050, 24000, 32000, 44100, 48000) else 48000
+                ost = out.add_stream("aac", rate=rate)
+                ost.bit_rate = 96000
+                ost.layout = "mono"
+                resampler = av.AudioResampler(format="fltp", layout="mono", rate=rate)
+                for frame in inp.decode(in_stream):
+                    frame.pts = None
+                    for f in resampler.resample(frame):
+                        for pkt in ost.encode(f):
+                            out.mux(pkt)
+                for f in resampler.resample(None):
+                    for pkt in ost.encode(f):
+                        out.mux(pkt)
+                for pkt in ost.encode(None):
+                    out.mux(pkt)
+        tmp.replace(dest)
+        return dest
+    except Exception:
+        dest.with_name(f".{dest.name}.tmp").unlink(missing_ok=True)
+        return src
