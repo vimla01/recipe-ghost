@@ -60,7 +60,7 @@ def _write(archive: Archive, rid: str, settings: Settings, progress: Progress) -
             time.sleep(1.0)
             return mock.fixture_reply_text()
 
-    recipe = llm.write_recipe(t, meta.cook, meta.dish, settings.model, settings.ollama_host, settings.num_ctx, progress, ask)
+    recipe = llm.write_recipe(t, meta.cook, meta.dish, settings.model, settings.ollama_host, settings.num_ctx, progress, ask, settings.think)
     progress(0.95, "checking every quote against her recording")
     recipe, report = verify_recipe(recipe, t)
     archive.save_recipe(rid, recipe)

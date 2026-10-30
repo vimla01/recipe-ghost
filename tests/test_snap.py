@@ -17,8 +17,14 @@ def test_repeated_cue_picks_occurrence_nearest_to_guess(hindi_transcript):
 
 def test_snaps_by_step_words_when_no_cue(hindi_transcript):
     idx = TranscriptIndex(hindi_transcript)
-    sec, ok = snap_step_time(idx, "dhakkan mat kholna — keep the lid closed", "", 0.0)
+    sec, ok = snap_step_time(idx, "dhakkan mat kholna — keep the lid closed", "", 2.0)
     assert (sec, ok) == (31.0, True)
+
+
+def test_exact_time_label_counts_as_anchor(hindi_transcript):
+    idx = TranscriptIndex(hindi_transcript)
+    # English step text shares no words with the Hindi line, but 6.5 is a real [time] label
+    assert snap_step_time(idx, "Take a fistful of flour", "", 6.5) == (6.5, True)
 
 
 def test_fallback_to_segment_around_guess(hindi_transcript):

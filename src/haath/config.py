@@ -27,6 +27,7 @@ class Settings:
     lang: str | None = None
     ollama_host: str = DEFAULT_OLLAMA_HOST
     num_ctx: int = DEFAULT_NUM_CTX
+    think: bool = False
     mock: bool = False
 
     @classmethod

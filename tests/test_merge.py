@@ -63,3 +63,13 @@ def test_write_recipe_chunks_and_merges_with_fake_model():
     assert "PART 1 of" in calls[0][0]["content"]
     assert r.dish == "Dal" and r.cook == "Nani"
     assert len(r.steps) == len(calls)
+
+
+def test_copied_prompt_examples_are_filtered():
+    from haath.llm import EXAMPLE_QUESTIONS, SYSTEM_PROMPT
+
+    assert EXAMPLE_QUESTIONS[0] in SYSTEM_PROMPT and "{examples}" not in SYSTEM_PROMPT
+    t = Transcript(language="hi", duration=10, segments=long_segments(2))
+    reply = Recipe(ask_next_time=[EXAMPLE_QUESTIONS[0].lower(), "How many baatis does this make?"]).model_dump_json()
+    r = write_recipe(t, "", "", "x", "", 16384, ask=lambda m: reply)
+    assert r.ask_next_time == ["How many baatis does this make?"]

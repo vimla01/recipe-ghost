@@ -160,8 +160,9 @@ def snap_step_time(index: TranscriptIndex, text: str, her_cue: str, model_sec: f
     """Snap to the start of the segment that contains this step's words.
 
     1. her_cue (already verified) found → that segment; nearest to Gemma's guess if repeated.
-    2. Otherwise segments sharing words with the step text → nearest such segment.
-    3. Otherwise the segment closest to Gemma's guess (returned as not snapped).
+    2. Gemma's start_sec is exactly one of the transcript's [time] labels → that segment.
+    3. Otherwise segments sharing words with the step text → nearest such segment.
+    4. Otherwise the segment around Gemma's guess (returned as not snapped).
     """
     segs = index.transcript.segments
     if not segs:
@@ -173,6 +174,12 @@ def snap_step_time(index: TranscriptIndex, text: str, her_cue: str, model_sec: f
         if matches:
             m = min(matches, key=lambda m: abs(segs[m.seg].start - model_sec))
             return segs[m.seg].start, True
+
+    # Gemma sees every line as "[83.4] ..." and is told to copy that label. An exact label is a
+    # real line in her recording (steps in English rarely share words with Hindi speech).
+    for s in segs:
+        if abs(s.start - model_sec) < 0.05:
+            return s.start, True
 
     words = {w for w in tokens(text) if len(w) >= 3}
     if words:

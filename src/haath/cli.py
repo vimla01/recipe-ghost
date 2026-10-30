@@ -20,6 +20,7 @@ def _common(p: argparse.ArgumentParser, archive_positional: bool = False) -> Non
     p.add_argument("--whisper-model", help="faster-whisper model: large-v3-turbo (default) or small for slow laptops")
     p.add_argument("--lang", help="force the spoken language: hi, mr, gu, en (default: auto-detect)")
     p.add_argument("--num-ctx", type=int, help="Gemma context window in tokens (default 16384)")
+    p.add_argument("--think", action="store_true", default=None, help="let Gemma reason before answering (slower, rarely needed)")
     p.add_argument("--mock", action="store_true", default=None, help="use a fixture transcript + reply (no Whisper/Ollama needed)")
 
 
@@ -31,6 +32,7 @@ def _settings(args) -> Settings:
         whisper_model=args.whisper_model,
         lang=args.lang,
         num_ctx=args.num_ctx,
+        think=args.think,
         mock=args.mock,
     )
 

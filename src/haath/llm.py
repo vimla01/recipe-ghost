@@ -34,16 +34,23 @@ Examples: "ek mutthi atta", "andaaz se namak", "थोड़ा सा हल्
 exact amount ("do cup"), confidence is high.
 4. `steps[].text` is a short, clear instruction in simple English. `her_cue` is her sensory \
 cue copied exactly from the transcript ("jab tak tel chhod de", "khushboo aane tak"), \
-or "" if she gave none. `start_sec` is the [time] of the line where she explains that step.
+or "" if she gave none. `start_sec` is copied exactly from the [time] label of the line where \
+she explains that step.
 5. `quotes`: up to 3 memorable lines copied exactly from the transcript — warmth, wisdom, humour.
 6. `tips` and `warnings`: only ones she actually said ("dhakkan mat kholna"). English is fine, \
 keep her phrase in brackets.
 7. `story`: one line about the dish's origin, occasion or who loved it — only if she said so, else "".
-8. `ask_next_time`: things she skipped or that were unclear, as short questions to ask her \
-("How long did the baati bake?", "Which brand of ghee?").
+8. `ask_next_time`: what SHE skipped or left unclear in THIS transcript, as short questions to ask \
+her — missing times, amounts, temperatures, how many it serves. The style, for a different dish: \
+{examples}. Never copy these; never ask about something she already said.
 9. Speech-to-text makes mistakes. In `name`, `text`, tips you may fix an obvious mistake \
 (e.g. a misheard spice name). Do not guess beyond that. Never change her_words, her_cue or quotes.
 Reply with JSON only."""
+
+# Style examples for ask_next_time, deliberately about another dish. Small models sometimes
+# copy prompt examples verbatim, so any reply that does is filtered out in write_recipe().
+EXAMPLE_QUESTIONS = ["How long did you roast the sooji for the halwa?", "How much sugar for one katori of sooji?"]
+SYSTEM_PROMPT = SYSTEM_PROMPT.replace("{examples}", ", ".join(f'"{q}"' for q in EXAMPLE_QUESTIONS))
 
 CHUNK_NOTE = (
     "\nThis is PART {i} of {n} of a long recording. Extract only what is in this part; "
@@ -225,15 +232,25 @@ def make_client(host: str):
     return ollama.Client(host=host, timeout=1800)
 
 
-def ask_model(client, model: str, messages: list[dict], num_ctx: int, host: str) -> str:
+def ask_model(client, model: str, messages: list[dict], num_ctx: int, host: str, think: bool = False) -> str:
+    kwargs = dict(
+        model=model,
+        messages=messages,
+        format=Recipe.llm_schema(),
+        options={"temperature": 0.1, "num_ctx": num_ctx, "num_predict": 4096},
+        keep_alive="10m",
+        # Gemma 4 thinks by default; for copying her words out of a transcript that hidden
+        # reasoning only costs minutes on a laptop CPU. --think turns it back on.
+        think=think,
+    )
     try:
-        resp = client.chat(
-            model=model,
-            messages=messages,
-            format=Recipe.llm_schema(),
-            options={"temperature": 0.1, "num_ctx": num_ctx, "num_predict": 4096},
-            keep_alive="10m",
-        )
+        try:
+            resp = client.chat(**kwargs)
+        except Exception as e:
+            if "think" not in str(e).lower():
+                raise
+            kwargs.pop("think")  # model without a thinking mode
+            resp = client.chat(**kwargs)
     except Exception as e:  # ollama raises ResponseError / httpx errors / ConnectionError
         raise _ollama_error(e, host, model) from e
     return resp["message"]["content"] if isinstance(resp, dict) else resp.message.content
@@ -248,6 +265,7 @@ def write_recipe(
     num_ctx: int,
     progress: Callable[[float, str], None] | None = None,
     ask: Callable[[list[dict]], str] | None = None,
+    think: bool = False,
 ) -> Recipe:
     """Run Gemma over the transcript (chunked if needed) and return the merged, un-verified Recipe."""
     if not transcript.segments:
@@ -257,7 +275,7 @@ def write_recipe(
         client = make_client(host)
 
         def ask(msgs: list[dict]) -> str:
-            return ask_model(client, model, msgs, num_ctx, host)
+            return ask_model(client, model, msgs, num_ctx, host, think)
 
     parts = []
     for i, chunk in enumerate(chunks, 1):
@@ -265,6 +283,8 @@ def write_recipe(
             progress((i - 1) / len(chunks), f"writing the card (part {i} of {len(chunks)})" if len(chunks) > 1 else "writing the card")
         parts.append(parse_reply(ask(build_messages(chunk, cook, dish, transcript.language, (i, len(chunks))))))
     recipe = merge_recipes(parts)
+    copied = {normalize(q) for q in EXAMPLE_QUESTIONS}
+    recipe.ask_next_time = [q for q in recipe.ask_next_time if normalize(q) not in copied]
     # The family's own labels win over whatever the model heard.
     recipe.dish = dish or recipe.dish
     recipe.cook = cook or recipe.cook
