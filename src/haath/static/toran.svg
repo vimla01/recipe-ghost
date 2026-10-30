@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 64" width="80" height="64">
+  <!-- one repeat of a marigold toran: a sagging string, a hanging flower strand, two mango leaves -->
+  <path d="M0 6 Q40 22 80 6" fill="none" stroke="#7a4a1f" stroke-width="1.5"/>
+  <g transform="translate(14 8) rotate(-20)">
+    <path d="M0 0 C7 6 7 16 0 22 C-7 16 -7 6 0 0Z" fill="#5d7a33"/><path d="M0 2 V20" stroke="#3f5a20" stroke-width=".8"/>
+  </g>
+  <g transform="translate(66 8) rotate(20)">
+    <path d="M0 0 C7 6 7 16 0 22 C-7 16 -7 6 0 0Z" fill="#5d7a33"/><path d="M0 2 V20" stroke="#3f5a20" stroke-width=".8"/>
+  </g>
+  <g id="f">
+    <circle cx="40" cy="20" r="7.5" fill="#e8890c"/><circle cx="40" cy="20" r="5" fill="#f5b324"/><circle cx="40" cy="20" r="2.2" fill="#c9600a"/>
+  </g>
+  <circle cx="40" cy="33" r="6.5" fill="#f5b324"/><circle cx="40" cy="33" r="4.2" fill="#e8890c"/><circle cx="40" cy="33" r="1.8" fill="#c9600a"/>
+  <circle cx="40" cy="45" r="5.5" fill="#e8890c"/><circle cx="40" cy="45" r="3.5" fill="#f5b324"/><circle cx="40" cy="45" r="1.5" fill="#c9600a"/>
+  <path d="M40 50 L37 58 H43Z" fill="#8f1d21"/>
+</svg>
