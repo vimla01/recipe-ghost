@@ -1,0 +1,47 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "haath-ka-swaad"
+version = "0.1.0"
+description = "For every recipe that only exists in her hands. Record family cooking, get a recipe card in her own words — fully offline."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
+authors = [{ name = "vimla" }]
+keywords = ["recipes", "whisper", "ollama", "gemma", "offline", "family", "hindi"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Environment :: Web Environment",
+    "Natural Language :: Hindi",
+    "Natural Language :: Marathi",
+]
+dependencies = [
+    "faster-whisper>=1.1",
+    # faster-whisper 1.2.x passes `metadata_errors` to av.open(), which PyAV 16+ removed.
+    "av>=12,<16",
+    "ollama>=0.4",
+    "pydantic>=2.7",
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+    "python-multipart>=0.0.9",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "httpx>=0.27"]
+
+[dependency-groups]
+dev = ["pytest>=8", "httpx>=0.27"]
+
+[project.scripts]
+haath = "haath.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/haath"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
