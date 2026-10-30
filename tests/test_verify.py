@@ -149,3 +149,23 @@ def test_card_text_has_no_em_dashes_but_her_words_untouched(hindi_transcript):
     assert out.story == "Nanaji loved it, every Diwali"
     assert out.steps[0].text == "Fry, until golden" and out.tips == ["Use ghee, lots"]
     assert out.quotes == ["Dhakkan mat kholna beech mein"]
+
+
+def test_translations_kept_only_for_phrases_on_the_card(hindi_transcript):
+    from haath.models import Translation
+
+    r = Recipe(
+        ingredients=[Ingredient(name="Flour", her_words="एक मुट्ठी आटा"), Ingredient(name="Ghee", her_words="do chammach ghee")],
+        steps=[Step(text="Fry", her_cue="jab tak tel chhodde")],
+        translations=[
+            Translation(original="एक मुट्ठी आटा", english="a fistful of flour"),
+            Translation(original="do chammach ghee", english="two spoons of ghee"),  # her_words dropped → translation dropped
+            Translation(original="jab tak tel chhodde", english="until the oil separates"),  # cue corrected → re-keyed
+            Translation(original="तुम्हारे नाना जी", english="your grandfather"),  # not on the card
+        ],
+    )
+    out, _ = verify_recipe(r, hindi_transcript)
+    assert [(t.original, t.english) for t in out.translations] == [
+        ("एक मुट्ठी आटा", "a fistful of flour"),
+        ("jab tak tel chhod de", "until the oil separates"),
+    ]

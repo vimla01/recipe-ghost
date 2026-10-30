@@ -53,6 +53,11 @@ her: missing times, amounts, temperatures, how many it serves. The style, for a 
 {examples}. Never copy these; never ask about something she already said.
 10. Speech-to-text makes mistakes. In `name`, `text`, tips you may fix an obvious mistake \
 (e.g. a misheard spice name). Do not guess beyond that. Never change her_words, her_cue or quotes.
+11. `translations`: for EVERY her_words, her_cue, quote and tip that is in Hindi, Marathi, \
+Gujarati or Hinglish (any script), add {"original": that exact text, "english": its short, \
+natural English meaning}, so family members who don't read the script can follow. \
+Skip text that is already English.
+The cook may be anyone in the family; "she/her" above just means the cook.
 Reply with JSON only."""
 
 # Style examples for ask_next_time, deliberately about another dish. Small models sometimes
@@ -214,6 +219,13 @@ def merge_recipes(parts: list[Recipe]) -> Recipe:
     quotes = _dedupe([q for p in parts for q in p.quotes], 0.9)
     merged.quotes = sorted(quotes, key=len, reverse=True)[:3] if len(quotes) > 3 else quotes
     merged.ask_next_time = _dedupe([q for p in parts for q in p.ask_next_time], 0.8)
+    seen_tr: set[str] = set()
+    for p in parts:
+        for t in p.translations:
+            key = normalize(t.original)
+            if key and key not in seen_tr:
+                seen_tr.add(key)
+                merged.translations.append(t.model_copy())
     return merged
 
 

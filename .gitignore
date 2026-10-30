@@ -218,3 +218,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Launch-video plugin output (large, includes a temporary browser profile)
+brag-output/

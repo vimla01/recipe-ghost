@@ -3,34 +3,153 @@
   "cook": "Mummy",
   "story": "Nanaji's favourite, made every Diwali.",
   "ingredients": [
-    {"name": "Wheat flour (atta)", "her_words": "एक बड़ा कटोरा आटा", "approx": "~2 cups / 250 g", "confidence": "med"},
-    {"name": "Semolina (sooji)", "her_words": "दो मुट्ठी सूजी", "approx": "~1/3 cup / 50 g", "confidence": "med"},
-    {"name": "Salt (namak)", "her_words": "अंदाज़ से नमक", "approx": "~1 tsp", "confidence": "low"},
-    {"name": "Carom seeds (ajwain)", "her_words": "थोड़ी सी अजवाइन", "approx": "~1/2 tsp", "confidence": "low"},
-    {"name": "Ghee for the dough (moyan)", "her_words": "खूब सारा घी", "approx": "~1/4 cup / 60 g", "confidence": "low"},
-    {"name": "Water", "her_words": "thoda thoda paani", "approx": "~1/2 cup, added slowly", "confidence": "low"},
-    {"name": "Ghee for dipping", "her_words": "aadha kilo ghee", "approx": "~1/2 cup", "confidence": "low"},
-    {"name": "Toor, chana and moong dal, mixed", "her_words": "एक कटोरी", "approx": "~3/4 cup / 150 g", "confidence": "med"},
-    {"name": "Turmeric (haldi)", "her_words": "", "approx": "~1/2 tsp", "confidence": "low"},
-    {"name": "Cumin (jeera)", "her_words": "", "approx": "~1 tsp", "confidence": "med"},
-    {"name": "Asafoetida (hing)", "her_words": "", "approx": "~a pinch", "confidence": "med"},
-    {"name": "Dried red chilli (lal mirch)", "her_words": "", "approx": "~1–2", "confidence": "low"},
-    {"name": "Onion and tomato (pyaaz tamatar)", "her_words": "", "approx": "~1 medium each", "confidence": "low"},
-    {"name": "Coriander leaves (hara dhaniya)", "her_words": "", "approx": "~2 tbsp, chopped", "confidence": "low"},
-    {"name": "Lemon (nimbu)", "her_words": "thoda sa nimbu", "approx": "~1/2 lemon", "confidence": "low"}
+    {
+      "name": "Wheat flour (atta)",
+      "her_words": "एक बड़ा कटोरा आटा",
+      "approx": "~2 cups / 250 g",
+      "confidence": "med"
+    },
+    {
+      "name": "Semolina (sooji)",
+      "her_words": "दो मुट्ठी सूजी",
+      "approx": "~1/3 cup / 50 g",
+      "confidence": "med"
+    },
+    {
+      "name": "Salt (namak)",
+      "her_words": "अंदाज़ से नमक",
+      "approx": "~1 tsp",
+      "confidence": "low"
+    },
+    {
+      "name": "Carom seeds (ajwain)",
+      "her_words": "थोड़ी सी अजवाइन",
+      "approx": "~1/2 tsp",
+      "confidence": "low"
+    },
+    {
+      "name": "Ghee for the dough (moyan)",
+      "her_words": "खूब सारा घी",
+      "approx": "~1/4 cup / 60 g",
+      "confidence": "low"
+    },
+    {
+      "name": "Water",
+      "her_words": "thoda thoda paani",
+      "approx": "~1/2 cup, added slowly",
+      "confidence": "low"
+    },
+    {
+      "name": "Ghee for dipping",
+      "her_words": "aadha kilo ghee",
+      "approx": "~1/2 cup",
+      "confidence": "low"
+    },
+    {
+      "name": "Toor, chana and moong dal, mixed",
+      "her_words": "एक कटोरी",
+      "approx": "~3/4 cup / 150 g",
+      "confidence": "med"
+    },
+    {
+      "name": "Turmeric (haldi)",
+      "her_words": "",
+      "approx": "~1/2 tsp",
+      "confidence": "low"
+    },
+    {
+      "name": "Cumin (jeera)",
+      "her_words": "",
+      "approx": "~1 tsp",
+      "confidence": "med"
+    },
+    {
+      "name": "Asafoetida (hing)",
+      "her_words": "",
+      "approx": "~a pinch",
+      "confidence": "med"
+    },
+    {
+      "name": "Dried red chilli (lal mirch)",
+      "her_words": "",
+      "approx": "~1–2",
+      "confidence": "low"
+    },
+    {
+      "name": "Onion and tomato (pyaaz tamatar)",
+      "her_words": "",
+      "approx": "~1 medium each",
+      "confidence": "low"
+    },
+    {
+      "name": "Coriander leaves (hara dhaniya)",
+      "her_words": "",
+      "approx": "~2 tbsp, chopped",
+      "confidence": "low"
+    },
+    {
+      "name": "Lemon (nimbu)",
+      "her_words": "thoda sa nimbu",
+      "approx": "~1/2 lemon",
+      "confidence": "low"
+    }
   ],
   "steps": [
-    {"text": "Mix the flour, semolina, salt and ajwain, crushing the ajwain between your palms.", "her_cue": "हाथ से मसल के डालना", "start_sec": 18},
-    {"text": "Rub in plenty of ghee until a fistful holds together when pressed.", "her_cue": "मुट्ठी में दबाओ तो लड्डू जैसा बंध जाए", "start_sec": 30},
-    {"text": "Add water little by little and knead a stiff dough. Cover and rest 10 minutes.", "her_cue": "sakht aata goondhna, naram nahi", "start_sec": 42},
-    {"text": "Shape small balls and press the centre lightly with your thumb.", "her_cue": "बीच में अंगूठे से हल्का सा दबा देना", "start_sec": 55},
-    {"text": "Bake at 200 °C, turning often, until golden and starting to crack.", "her_cue": "जब तक सुनहरी न हो जाए और फटने लगे", "start_sec": 66},
-    {"text": "Dip the hot baatis in melted ghee.", "her_cue": "poora doobna chahiye", "start_sec": 80},
-    {"text": "Pressure-cook the mixed dal with turmeric and salt for three whistles.", "her_cue": "teen seeti", "start_sec": 90},
-    {"text": "For the tadka, heat ghee and add cumin, hing and red chilli.", "her_cue": "Jab tak jeera chatakne na lage", "start_sec": 100},
-    {"text": "Add onion and tomato and fry the masala.", "her_cue": "जब तक तेल न छोड़ दे", "start_sec": 112},
-    {"text": "Pour the tadka into the dal and let it boil with the lid on.", "her_cue": "Dhakkan mat kholna", "start_sec": 116},
-    {"text": "Finish with hara dhaniya and a little nimbu.", "her_cue": "", "start_sec": 124}
+    {
+      "text": "Mix the flour, semolina, salt and ajwain, crushing the ajwain between your palms.",
+      "her_cue": "हाथ से मसल के डालना",
+      "start_sec": 18
+    },
+    {
+      "text": "Rub in plenty of ghee until a fistful holds together when pressed.",
+      "her_cue": "मुट्ठी में दबाओ तो लड्डू जैसा बंध जाए",
+      "start_sec": 30
+    },
+    {
+      "text": "Add water little by little and knead a stiff dough. Cover and rest 10 minutes.",
+      "her_cue": "sakht aata goondhna, naram nahi",
+      "start_sec": 42
+    },
+    {
+      "text": "Shape small balls and press the centre lightly with your thumb.",
+      "her_cue": "बीच में अंगूठे से हल्का सा दबा देना",
+      "start_sec": 55
+    },
+    {
+      "text": "Bake at 200 °C, turning often, until golden and starting to crack.",
+      "her_cue": "जब तक सुनहरी न हो जाए और फटने लगे",
+      "start_sec": 66
+    },
+    {
+      "text": "Dip the hot baatis in melted ghee.",
+      "her_cue": "poora doobna chahiye",
+      "start_sec": 80
+    },
+    {
+      "text": "Pressure-cook the mixed dal with turmeric and salt for three whistles.",
+      "her_cue": "teen seeti",
+      "start_sec": 90
+    },
+    {
+      "text": "For the tadka, heat ghee and add cumin, hing and red chilli.",
+      "her_cue": "Jab tak jeera chatakne na lage",
+      "start_sec": 100
+    },
+    {
+      "text": "Add onion and tomato and fry the masala.",
+      "her_cue": "जब तक तेल न छोड़ दे",
+      "start_sec": 112
+    },
+    {
+      "text": "Pour the tadka into the dal and let it boil with the lid on.",
+      "her_cue": "Dhakkan mat kholna",
+      "start_sec": 116
+    },
+    {
+      "text": "Finish with hara dhaniya and a little nimbu.",
+      "her_cue": "",
+      "start_sec": 124
+    }
   ],
   "tips": [
     "Be generous with ghee in the dough (khoob saara ghee); the moyan makes the baati crisp.",
@@ -50,5 +169,91 @@
     "How much water goes in the cooker with the dal?",
     "Whole red chillies or chilli powder in the tadka?",
     "How many baatis does this make?"
+  ],
+  "translations": [
+    {
+      "original": "एक बड़ा कटोरा आटा",
+      "english": "one big bowl of flour"
+    },
+    {
+      "original": "दो मुट्ठी सूजी",
+      "english": "two fistfuls of semolina"
+    },
+    {
+      "original": "अंदाज़ से नमक",
+      "english": "salt by feel"
+    },
+    {
+      "original": "थोड़ी सी अजवाइन",
+      "english": "a little ajwain"
+    },
+    {
+      "original": "खूब सारा घी",
+      "english": "lots and lots of ghee"
+    },
+    {
+      "original": "thoda thoda paani",
+      "english": "water, a little at a time"
+    },
+    {
+      "original": "एक कटोरी",
+      "english": "one katori (small bowl)"
+    },
+    {
+      "original": "thoda sa nimbu",
+      "english": "a little lemon"
+    },
+    {
+      "original": "हाथ से मसल के डालना",
+      "english": "crush it between your palms as you add it"
+    },
+    {
+      "original": "मुट्ठी में दबाओ तो लड्डू जैसा बंध जाए",
+      "english": "press it in your fist and it should hold like a laddoo"
+    },
+    {
+      "original": "sakht aata goondhna, naram nahi",
+      "english": "knead a stiff dough, not soft"
+    },
+    {
+      "original": "बीच में अंगूठे से हल्का सा दबा देना",
+      "english": "press the middle lightly with your thumb"
+    },
+    {
+      "original": "जब तक सुनहरी न हो जाए और फटने लगे",
+      "english": "until golden and starting to crack"
+    },
+    {
+      "original": "poora doobna chahiye",
+      "english": "it should be fully dunked"
+    },
+    {
+      "original": "teen seeti",
+      "english": "three whistles"
+    },
+    {
+      "original": "Jab tak jeera chatakne na lage",
+      "english": "until the cumin starts to splutter"
+    },
+    {
+      "original": "जब तक तेल न छोड़ दे",
+      "english": "until the oil separates"
+    },
+    {
+      "original": "Dhakkan mat kholna",
+      "english": "don't open the lid"
+    },
+    {
+      "original": "खाना हमेशा प्यार से बनाओ, स्वाद अपने आप आता है।",
+      "english": "always cook with love; the taste comes by itself"
+    },
+    {
+      "original": "हाथ से ही आता है अंदाज़",
+      "english": "the feel for it only comes from your own hands"
+    },
+    {
+      "original": "aadha kilo ghee",
+      "english": "half a kilo of ghee"
+    }
   ]
 }

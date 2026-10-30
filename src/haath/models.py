@@ -47,6 +47,11 @@ class Step(_Strict):
         return parse_seconds(v)
 
 
+class Translation(_Strict):
+    original: str = Field("", description="A her_words, her_cue, quote or tip exactly as written on the card, in its original language.")
+    english: str = Field("", description="Its short, natural English meaning.")
+
+
 class Recipe(_Strict):
     dish: str = Field("", description="Dish name.")
     cook: str = Field("", description="Who is cooking, e.g. 'Mummy', 'Nani'.")
@@ -57,6 +62,7 @@ class Recipe(_Strict):
     warnings: list[str] = Field(default_factory=list, description="Warnings she gave, e.g. 'dhakkan mat kholna'.")
     quotes: list[str] = Field(default_factory=list, description="Up to 3 memorable lines copied exactly from the transcript.")
     ask_next_time: list[str] = Field(default_factory=list, description="Things she skipped or that were unclear, phrased as questions to ask her.")
+    translations: list[Translation] = Field(default_factory=list, description="English meaning of every her_words, her_cue, quote and tip that is not in English.")
 
     @field_validator("tips", "warnings", "quotes", "ask_next_time", mode="before")
     @classmethod
@@ -140,3 +146,4 @@ class Meta(BaseModel):
     dropped: int = 0
     dropped_items: list[str] = Field(default_factory=list)
     edited: bool = False
+    reviewed: list[str] = Field(default_factory=list)  # keys of lines the family ticked as correct (see review.py)

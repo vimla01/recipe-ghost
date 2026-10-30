@@ -38,7 +38,7 @@ def _transcribe(archive: Archive, rid: str, settings: Settings, progress: Progre
     else:
         from haath.transcribe import make_playable, transcribe
 
-        progress(0.0, "preparing her voice for playback")
+        progress(0.0, "preparing the recording for playback")
         playback = make_playable(src, archive.dir(rid) / "voice.m4a")
         archive.update_meta(rid, playback=playback.name)
         progress(0.0, "loading Whisper (first time can take a minute)")
@@ -61,7 +61,7 @@ def _write(archive: Archive, rid: str, settings: Settings, progress: Progress) -
             return mock.fixture_reply_text()
 
     recipe = llm.write_recipe(t, meta.cook, meta.dish, settings.model, settings.ollama_host, settings.num_ctx, progress, ask, settings.think)
-    progress(0.95, "checking every quote against her recording")
+    progress(0.95, "checking every quote against the recording")
     recipe, report = verify_recipe(recipe, t)
     archive.save_recipe(rid, recipe)
     archive.update_meta(
@@ -72,6 +72,7 @@ def _write(archive: Archive, rid: str, settings: Settings, progress: Progress) -
         dropped=report.dropped_count,
         dropped_items=report.dropped,
         edited=False,
+        reviewed=[],  # a freshly written card hasn't been checked by anyone yet
     )
 
 

@@ -32,3 +32,13 @@ def test_falls_back_to_commas_and_glues_tiny_pieces():
 def test_short_segments_untouched():
     seg = seg_from([(0.0, " haldi"), (0.5, " daalo.")])
     assert split_long_segments([seg]) == [seg]
+
+
+def test_unpunctuated_speech_is_cut_at_pauses():
+    # Whisper often writes Hindi with no punctuation; the longest silences mark the thoughts.
+    words = [(0.0, " पोहा"), (0.4, " कैसे"), (0.8, " बनता"), (1.2, " है"), (1.6, " दिखाता"), (2.0, " हूँ"),
+             (4.5, " पानी"), (4.9, " से"), (5.3, " धो"), (5.7, " लीजिए"),
+             (9.0, " फिर"), (9.4, " तेल"), (9.8, " गरम"), (10.2, " कीजिए")]
+    out = split_long_segments([seg_from(words)], max_sec=5)
+    assert [s.start for s in out] == [0.0, 4.5, 9.0]
+    assert out[0].text == "पोहा कैसे बनता है दिखाता हूँ"

@@ -29,13 +29,16 @@ function svgUse(href, cls) {
 }
 const icon = (name, cls) => el("svg-use", { href: "#" + name, class: cls });
 
+const norm = (s) => (s || "").normalize("NFKC").toLowerCase().replace(/[\u200b-\u200f\u2060\ufeff]/g, "")
+  .replace(/[^\p{L}\p{M}\p{N}]+/gu, " ").trim();
+const cap = (s) => (s || "").trim().replace(/^./, (c) => c.toUpperCase());
 const fmt = (s) => {
   s = Math.max(0, Math.floor(s || 0));
   const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = String(s % 60).padStart(2, "0");
   return h ? `${h}:${String(m).padStart(2, "0")}:${sec}` : `${m}:${sec}`;
 };
 const LANGS = { hi: "Hindi", mr: "Marathi", gu: "Gujarati", en: "English", ur: "Urdu", pa: "Punjabi", bn: "Bengali", ta: "Tamil", te: "Telugu", kn: "Kannada", ml: "Malayalam" };
-const STATUS = { queued: "waiting", transcribing: "listening to her", writing: "writing the card", done: "ready", error: "needs attention" };
+const STATUS = { queued: "waiting", transcribing: "listening", writing: "writing the card", done: "ready", error: "needs attention" };
 
 async function api(path, opts = {}) {
   const res = await fetch(path, opts);
@@ -107,7 +110,7 @@ async function refreshList(box) {
   if (!items.length) {
     box.replaceChildren(el("div", { class: "card empty" }, icon("marigold"),
       el("p", {}, "No recipes yet. The first one is always the hardest to ask for."),
-      el("p", { class: "small muted" }, "Sit with her while she cooks. Press record. Let her talk.")));
+      el("p", { class: "small muted" }, "Sit with them while they cook. Press record. Let them talk.")));
   } else {
     box.replaceChildren(...items.map(recipeRow));
   }
@@ -117,8 +120,10 @@ async function refreshList(box) {
 function recipeRow(m) {
   const busy = !["done", "error"].includes(m.status);
   const when = m.created ? new Date(m.created).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "";
-  const sub = [m.cook && `as told by ${m.cook}`, when, m.duration ? fmt(m.duration) : null, m.status === "done" ? `${m.n_steps} steps` : null].filter(Boolean).join(" · ");
-  const chip = el("span", { class: "chip " + (busy ? "busy" : m.status) }, busy ? el("span", { class: "busy-dot" }) : null, STATUS[m.status] || m.status);
+  const sub = [m.cook && `as told by ${m.cook}`, when, m.duration ? fmt(m.duration) : null, m.status === "done" ? `${m.n_steps} steps` : null,
+    m.review_done ? `${m.review_done}/${m.review_total} checked` : null].filter(Boolean).join(" · ");
+  const allChecked = m.status === "done" && m.review_total > 0 && m.review_done === m.review_total;
+  const chip = el("span", { class: "chip " + (busy ? "busy" : m.status) }, busy ? el("span", { class: "busy-dot" }) : null, allChecked ? "✓ family-checked" : STATUS[m.status] || m.status);
   return el("a", { class: "rcard " + m.status, href: `#/r/${m.id}` },
     icon("marigold", "flower"),
     el("div", {},
@@ -134,6 +139,10 @@ function recipeRow(m) {
 
 function recordPanel() {
   const cook = el("input", { type: "text", id: "cook", placeholder: "Mummy, Nani, Dadi…", autocomplete: "off", value: localStorage.getItem("haath.cook") || "" });
+  const heading = el("h2", {});
+  const setHeading = () => (heading.textContent = cook.value.trim() ? `Record ${cap(cook.value)} cooking` : "Record the family cook");
+  cook.addEventListener("input", setHeading);
+  setHeading();
   const dish = el("input", { type: "text", id: "dish", placeholder: "Dal Baati, Poha, Puran Poli…", autocomplete: "off" });
   const lang = el("select", { id: "lang" },
     el("option", { value: "" }, "Detect automatically"),
@@ -148,14 +157,14 @@ function recordPanel() {
   const file = el("input", { type: "file", accept: "audio/*,.m4a,.opus,.ogg,.mp3,.wav,.webm,.aac,.amr,.3gp" });
   const upload = el("label", { class: "btn upload" }, "Upload a voice note", file);
   const panel = el("section", { class: "card record-card" },
-    el("p", { class: "kicker" }, "Before the recipe leaves with her"),
-    el("h2", {}, "Record her cooking"),
+    el("p", { class: "kicker" }, "Before the recipe is lost"),
+    heading,
     el("div", { class: "fields" },
       el("div", { class: "field" }, el("label", { for: "cook" }, "Who is cooking"), cook),
-      el("div", { class: "field" }, el("label", { for: "dish" }, "What is she making"), dish),
+      el("div", { class: "field" }, el("label", { for: "dish" }, "What are they making"), dish),
       el("div", { class: "field", style: "flex-basis:100%" }, el("label", { for: "lang" }, "Language"), lang)),
     wrap, timer, meter,
-    el("p", { class: "ask-first" }, el("b", {}, "Ask her first."), " This stays on this laptop."),
+    el("p", { class: "ask-first" }, el("b", {}, "Ask first."), " This stays on this laptop."),
     preview,
     el("div", { class: "or" }, "or"),
     upload);
@@ -277,7 +286,7 @@ function recordPanel() {
   return panel;
 }
 
-// ---- audio player: her voice, from the moment she said it -------------------
+// ---- audio player: their voice, from the moment they said it ---------------
 
 const audio = $("#voice");
 const player = $("#player");
@@ -325,6 +334,8 @@ $("#player-close").addEventListener("click", stopVoice);
 
 // ---- recipe card -----------------------------------------------------------
 
+const REVIEWING = new Set(); // recipe ids currently in review mode
+
 async function renderRecipe(rid) {
   let data;
   try {
@@ -335,6 +346,7 @@ async function renderRecipe(rid) {
   }
   if (!location.hash.startsWith(`#/r/${rid}`)) return;
   const { meta, recipe, transcript } = data;
+  const rv = data.review || { keys: {}, checked: [], done: 0, total: 0 };
   const back = el("a", { class: "back", href: "#/" }, "← All recipes");
 
   if (!recipe || !["done"].includes(meta.status)) {
@@ -362,7 +374,40 @@ async function renderRecipe(rid) {
     const later = steps.slice(i + 1).map((s) => s.start_sec).filter((t) => t > steps[i].start_sec);
     return later.length ? Math.min(...later) + 0.5 : null;
   };
-  const who = recipe.cook || meta.cook || "her";
+  const who = cap(recipe.cook || meta.cook) || "the cook";
+  const whose = who === "the cook" ? "the cook's" : `${who}'s`;
+  const tr = new Map((recipe.translations || []).map((t) => [norm(t.original), t.english]));
+  // Family review: a ✓ per line; ticks are keyed on the line's content (see review.py).
+  const reviewing = REVIEWING.has(rid);
+  const checked = new Set(rv.checked);
+  const counter = el("strong", {});
+  const meter = el("div", { class: "rv-progress" }, el("div"));
+  const updateCount = () => {
+    counter.textContent = `${checked.size} of ${rv.total}`;
+    meter.firstChild.style.width = (rv.total ? (100 * checked.size) / rv.total : 0) + "%";
+    meter.classList.toggle("all", rv.total > 0 && checked.size === rv.total);
+  };
+  const tick = (kind, i) => {
+    const key = rv.keys[kind]?.[i];
+    if (!key) return null;
+    if (!reviewing) return checked.has(key) ? el("span", { class: "rv-mark", title: "Checked by the family" }, "✓") : null;
+    const b = el("button", { class: "rv" + (checked.has(key) ? " ok" : ""), type: "button", "aria-pressed": String(checked.has(key)),
+      "aria-label": "This line is correct", title: "Tap when this line is right" }, "✓");
+    b.addEventListener("click", async () => {
+      const ok = !checked.has(key);
+      try {
+        const res = await api(`/api/recipes/${rid}/review`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key, ok }) });
+        checked.clear();
+        res.checked.forEach((k) => checked.add(k));
+        b.classList.toggle("ok", ok);
+        b.setAttribute("aria-pressed", String(ok));
+        updateCount();
+      } catch (e) { banner(e.message, e.fix); }
+    });
+    return b;
+  };
+  updateCount();
+  const mean = (text) => (text && tr.get(norm(text)) ? el("div", { class: "mean" }, tr.get(norm(text))) : null);
   const stepEls = steps.map((s, i) =>
     el("li", { class: "step", "data-start": s.start_sec },
       el("button", { class: "play", type: "button", "aria-label": `Play ${who}'s voice for step ${i + 1}`, title: `Hear ${who} at ${fmt(s.start_sec)}`,
@@ -371,7 +416,9 @@ async function renderRecipe(rid) {
       el("div", {},
         el("div", { class: "text" }, s.text),
         s.her_cue ? el("div", { class: "cue" }, s.her_cue) : null,
-        el("div", { class: "at" }, fmt(s.start_sec)))));
+        s.her_cue ? mean(s.her_cue) : null,
+        el("div", { class: "at" }, fmt(s.start_sec))),
+      tick("steps", i)));
 
   const segEls = (transcript?.segments || []).map((g) =>
     el("div", { class: "seg", "data-start": g.start, "data-end": g.end },
@@ -387,48 +434,63 @@ async function renderRecipe(rid) {
   };
 
   const lang = LANGS[meta.language] || meta.language;
-  const sheet = el("article", { class: "sheet" },
+  const sheet = el("article", { class: "sheet" + (reviewing ? " reviewing" : "") },
     el("p", { class: "kicker" }, "From the family kitchen"),
     el("h1", { class: "dish" }, recipe.dish || meta.dish || "Untitled"),
     el("div", { class: "byline" }, "as told by ", el("span", { class: "who" }, who),
-      el("span", { class: "muted" }, [meta.duration ? ` · ${fmt(meta.duration)} of her voice` : "", lang ? ` · ${lang}` : ""].join(""))),
+      el("span", { class: "muted" }, [meta.duration ? ` · ${fmt(meta.duration)} recorded` : "", lang ? ` · ${lang}` : ""].join(""))),
     recipe.story ? el("p", { class: "story" }, recipe.story) : null,
     el("div", { class: "toolbar" },
-      el("button", { class: "btn primary", onclick: () => playFrom(rid, 0, `${who} · from the start`) }, icon("play"), "Hear her from the start"),
+      el("button", { class: "btn primary", onclick: () => playFrom(rid, 0, `${who} · from the start`) }, icon("play"), `Hear ${who} from the start`),
+      el("button", { class: reviewing ? "btn primary" : "btn", onclick: () => { reviewing ? REVIEWING.delete(rid) : REVIEWING.add(rid); renderRecipe(rid); } },
+        reviewing ? "Done reviewing" : "Review"),
       el("a", { class: "btn", href: `#/r/${rid}/edit` }, "Edit"),
       el("button", { class: "btn ghost", onclick: () => window.print() }, "Print"),
       el("button", { class: "btn ghost", title: `Re-run ${STATUS_INFO.model || "the model"} on the same transcript`, onclick: () => redo(rid, false, meta.edited) }, "Re-write"),
       el("button", { class: "btn ghost", onclick: () => trash(rid, meta) }, "Delete")),
     meta.dropped
       ? el("details", { class: "guard" },
-          el("summary", {}, `✓ Checked against her recording: ${meta.dropped} line${meta.dropped > 1 ? "s" : ""} the model wrote but she never said ${meta.dropped > 1 ? "were" : "was"} removed.`),
+          el("summary", {}, `✓ Checked against the recording: ${meta.dropped} line${meta.dropped > 1 ? "s" : ""} the model wrote but ${who} never said ${meta.dropped > 1 ? "were" : "was"} removed.`),
           el("ul", {}, meta.dropped_items.map((d) => el("li", {}, d))))
-      : el("div", { class: "guard" }, "✓ Every quote and measure below was checked against her recording."),
+      : el("div", { class: "guard" }, "✓ Every quote and measure below was checked against the recording."),
+    reviewing
+      ? el("div", { class: "review-panel" },
+          el("div", {}, el("strong", {}, `Go through the card with ${who}.`),
+            " Tap ✓ on every line that's right. Fix anything wrong with Edit; a changed line needs a new tick."),
+          el("div", { class: "rv-row" }, "Checked ", counter, meter))
+      : rv.total
+        ? el("div", { class: "rv-badge" + (rv.done === rv.total ? " all" : "") },
+            rv.done === rv.total
+              ? `✓ Checked line by line by the family (${rv.total} of ${rv.total}).`
+              : `${rv.done} of ${rv.total} lines checked by the family. Press Review to go through the rest with ${who}.`)
+        : null,
 
     section("Ingredients", "marigold",
-      el("ul", { class: "ingredients" }, recipe.ingredients.map((g) =>
+      el("ul", { class: "ingredients" }, recipe.ingredients.map((g, i) =>
         el("li", { class: "ing" },
+          tick("ingredients", i),
           g.her_words ? el("div", { class: "her" }, g.her_words) : null,
+          mean(g.her_words),
           el("div", { class: "name" }, g.name),
           g.approx ? el("div", { class: "approx", title: `Approximate, ${g.confidence} confidence` }, g.approx, " approx.", el("span", { class: "conf " + g.confidence })) : null))),
-      el("p", { class: "small muted", style: "margin-top:8px" }, "Big writing is how she said it. Small measures are estimates, so trust her words first.")),
+      el("p", { class: "small muted", style: "margin-top:8px" }, `Big writing is how ${who} said it. Small measures are estimates, so trust those words first.`)),
 
     section("Method", "diya", el("ol", { class: "steps" }, stepEls),
-      el("p", { class: "small muted" }, "Press ▶ to hear her explain that step in her own voice.")),
+      el("p", { class: "small muted" }, `Press ▶ to hear ${who} explain that step in ${whose} own voice.`)),
 
     recipe.tips.length || recipe.warnings.length
-      ? section("What she reminded us", null,
+      ? section(`What ${who} reminded us`, null,
           el("div", { class: "notes" },
-            recipe.tips.length ? el("div", { class: "note tips" }, el("h4", {}, "Her tips"), el("ul", {}, recipe.tips.map((t) => el("li", {}, t)))) : null,
-            recipe.warnings.length ? el("div", { class: "note warn" }, el("h4", {}, "Careful!"), el("ul", {}, recipe.warnings.map((t) => el("li", {}, t)))) : null))
+            recipe.tips.length ? el("div", { class: "note tips" }, el("h4", {}, "Tips"), el("ul", {}, recipe.tips.map((t, i) => el("li", {}, t, mean(t), tick("tips", i))))) : null,
+            recipe.warnings.length ? el("div", { class: "note warn" }, el("h4", {}, "Careful!"), el("ul", {}, recipe.warnings.map((t, i) => el("li", {}, t, tick("warnings", i))))) : null))
       : null,
 
     recipe.quotes.length
-      ? section("In her words", null, el("div", { class: "quotes" }, recipe.quotes.map((q) => el("blockquote", {}, q, el("cite", {}, "· " + who)))))
+      ? section(`In ${whose} words`, null, el("div", { class: "quotes" }, recipe.quotes.map((q, i) => el("blockquote", {}, q, mean(q), el("cite", {}, "· " + who), tick("quotes", i)))))
       : null,
 
     recipe.ask_next_time.length
-      ? section("Ask her next time", null, el("ul", { class: "asks" }, recipe.ask_next_time.map((q) => el("li", {}, q))),
+      ? section(`Ask ${who} next time`, null, el("ul", { class: "asks" }, recipe.ask_next_time.map((q) => el("li", {}, q))),
           el("p", { class: "small muted" }, "Little gaps in the recipe. Ask while you still can, then fix the card with Edit."))
       : null,
 
@@ -457,7 +519,7 @@ async function redo(rid, full = false, edited = false) {
 }
 
 async function trash(rid, meta) {
-  if (!confirm(`Move “${meta.dish || "this recipe"}” to the trash folder? Her recording is kept in the archive's .trash folder.`)) return;
+  if (!confirm(`Move “${meta.dish || "this recipe"}” to the trash folder? The recording is kept in the archive's .trash folder.`)) return;
   try {
     await api(`/api/recipes/${rid}`, { method: "DELETE" });
     stopVoice();
@@ -483,7 +545,7 @@ async function renderEdit(rid) {
   const drawIngs = () => ingBox.replaceChildren(...r.ingredients.map((g, i) =>
     el("div", { class: "erow ing" },
       input(g, "name", { placeholder: "Ingredient", "aria-label": "Ingredient name" }),
-      input(g, "her_words", { placeholder: "Her words (ek mutthi…)", "aria-label": "Her words" }),
+      input(g, "her_words", { placeholder: "Their words (ek mutthi…)", "aria-label": "Their words" }),
       input(g, "approx", { placeholder: "~1 cup / 120 g", "aria-label": "Approximate measure" }),
       el("select", { "aria-label": "Confidence", onchange: (e) => (g.confidence = e.target.value) },
         ...["low", "med", "high"].map((c) => el("option", { value: c, selected: g.confidence === c }, c))),
@@ -493,7 +555,7 @@ async function renderEdit(rid) {
   const stepBox = el("div", { class: "rowset" });
   const drawSteps = () => stepBox.replaceChildren(...r.steps.map((s, i) =>
     el("div", { class: "erow st" },
-      input(s, "her_cue", { placeholder: "Her cue (jab tak tel chhod de…)", "aria-label": `Step ${i + 1} her cue` }),
+      input(s, "her_cue", { placeholder: "Their cue (jab tak tel chhod de…)", "aria-label": `Step ${i + 1} cue` }),
       el("input", { type: "number", min: 0, step: 0.1, value: s.start_sec, "aria-label": `Step ${i + 1} start second`, title: "Starts at (seconds)", oninput: (e) => (s.start_sec = parseFloat(e.target.value) || 0) }),
       el("button", { class: "x", type: "button", "aria-label": "Remove step", onclick: () => { r.steps.splice(i, 1); drawSteps(); } }, "✕"),
       area(s, "text", { placeholder: `Step ${i + 1}`, "aria-label": `Step ${i + 1}` }))));
@@ -510,7 +572,7 @@ async function renderEdit(rid) {
   app.replaceChildren(el("div", { class: "recipe edit" },
     el("a", { class: "back", href: `#/r/${rid}` }, "← Back to the card"),
     el("article", { class: "sheet" },
-      el("p", { class: "kicker" }, "Fix anything by hand. You know her better than the machine does"),
+      el("p", { class: "kicker" }, "Fix anything by hand. You know them better than the machine does"),
       el("h1", { class: "dish" }, "Edit recipe"),
       el("div", { class: "row", style: "margin-top:16px" },
         el("div", { class: "field" }, el("label", {}, "Dish"), input(r, "dish")),
@@ -524,8 +586,8 @@ async function renderEdit(rid) {
         el("div", { class: "lists" },
           listArea("tips", "Tips", "one per line"),
           listArea("warnings", "Warnings", "one per line"),
-          listArea("quotes", "Her quotes", "up to 3"),
-          listArea("ask_next_time", "Ask her next time", "one question per line"))),
+          listArea("quotes", "Quotes", "up to 3"),
+          listArea("ask_next_time", "Ask next time", "one question per line"))),
       el("div", { class: "savebar" },
         el("a", { class: "btn ghost", href: `#/r/${rid}` }, "Cancel"),
         el("button", { class: "btn primary", onclick: save }, "Save card")))));

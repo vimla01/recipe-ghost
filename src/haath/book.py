@@ -17,6 +17,8 @@ from importlib.resources import files
 from pathlib import Path
 
 from haath.models import Meta, Recipe
+from haath.review import review_summary
+from haath.verify import normalize, translations_lookup
 from haath.storage import Archive, atomic_write_bytes
 
 STATIC = Path(str(files("haath") / "static"))
@@ -54,6 +56,9 @@ ol.steps li { counter-increment:s; display:grid; grid-template-columns:34px 1fr;
 ol.steps li::before { content:counter(s); width:26px; height:26px; border-radius:50%; background:var(--red); color:#fff; display:grid; place-items:center; font-size:13px; font-weight:600; margin-top:2px; }
 .cue { font-family:var(--hand); color:var(--red); font-size:18px; }
 .cue::before { content:"“"; } .cue::after { content:"”"; }
+.checked { display:inline-block; margin-top:6px; font-size:13.5px; font-weight:600; color:var(--leaf); background:rgba(93,122,51,.12); padding:2px 10px; border-radius:99px; }
+.mean { font-family:var(--sans); font-style:italic; font-size:13.5px; color:var(--muted); }
+blockquote .mean { font-size:14px; }
 .play { display:inline-block; margin-left:6px; font-size:13px; color:var(--mari); text-decoration:none; border:1px solid var(--mari); border-radius:99px; padding:0 9px; cursor:pointer; background:none; }
 .notes { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:20px; }
 .note { padding:10px 14px; border-radius:10px; break-inside:avoid; }
@@ -111,12 +116,22 @@ def _inline_fonts() -> str:
     return re.sub(r'url\("([^"]+\.woff2)"\)', data_uri, css)
 
 
+def _mean(tr: dict[str, str], text: str) -> str:
+    """Small English meaning under words kept in the original language."""
+    en = tr.get(normalize(text), "")
+    return f'<div class="mean">{escape(en)}</div>' if en else ""
+
+
 def render_recipe(meta: Meta, r: Recipe, audio_src: str) -> str:
     e = escape
-    who = e(r.cook or meta.cook or "her")
+    who = e((r.cook or meta.cook or "the cook").strip().capitalize() if (r.cook or meta.cook) else "the cook")
+    tr = translations_lookup(r)
     steps = r.steps
     out = [f'<section class="page" id="{e(meta.id)}">', f"<h2>{e(r.dish or meta.dish or 'Untitled')}</h2>"]
-    out.append(f'<div class="by">as told by <b>{who}</b>' + (f" · {_fmt(meta.duration)} of her voice" if meta.duration else "") + "</div>")
+    out.append(f'<div class="by">as told by <b>{who}</b>' + (f" · {_fmt(meta.duration)} recorded" if meta.duration else "") + "</div>")
+    rv = review_summary(r, meta)
+    if rv["total"] and rv["done"] == rv["total"]:
+        out.append('<div class="checked">✓ Checked line by line by the family</div>')
     if r.story:
         out.append(f'<p class="story">{e(r.story)}</p>')
     if r.ingredients:
@@ -124,7 +139,7 @@ def render_recipe(meta: Meta, r: Recipe, audio_src: str) -> str:
         for g in r.ingredients:
             out.append("<li>")
             if g.her_words:
-                out.append(f'<div class="her">{e(g.her_words)}</div>')
+                out.append(f'<div class="her">{e(g.her_words)}</div>' + _mean(tr, g.her_words))
             out.append(f'<div class="name">{e(g.name)}</div>')
             if g.approx:
                 out.append(f'<div class="approx">{e(g.approx)} approx.</div>')
@@ -136,20 +151,20 @@ def render_recipe(meta: Meta, r: Recipe, audio_src: str) -> str:
             later = [x.start_sec for x in steps[i + 1 :] if x.start_sec > s.start_sec]
             until = f' data-until="{min(later) + 0.5:.2f}"' if later else ""
             play = f'<button class="play" data-src="{e(audio_src)}" data-t="{s.start_sec:.2f}"{until}>▶ {_fmt(s.start_sec)}</button>'
-            cue = f'<div class="cue">{e(s.her_cue)}</div>' if s.her_cue else ""
+            cue = f'<div class="cue">{e(s.her_cue)}</div>{_mean(tr, s.her_cue)}' if s.her_cue else ""
             out.append(f"<li><div>{e(s.text)} {play}{cue}</div></li>")
         out.append("</ol>")
     if r.tips or r.warnings:
         out.append('<div class="notes">')
         if r.tips:
-            out.append('<div class="note t"><h4>Her tips</h4><ul>' + "".join(f"<li>{e(t)}</li>" for t in r.tips) + "</ul></div>")
+            out.append('<div class="note t"><h4>Tips</h4><ul>' + "".join(f"<li>{e(t)}{_mean(tr, t)}</li>" for t in r.tips) + "</ul></div>")
         if r.warnings:
             out.append('<div class="note w"><h4>Careful!</h4><ul>' + "".join(f"<li>{e(t)}</li>" for t in r.warnings) + "</ul></div>")
         out.append("</div>")
     for q in r.quotes:
-        out.append(f"<blockquote>{e(q)} <small>· {who}</small></blockquote>")
+        out.append(f"<blockquote>{e(q)} <small>· {who}</small>{_mean(tr, q)}</blockquote>")
     if r.ask_next_time:
-        out.append('<h3>Ask her next time</h3><ul class="asks">' + "".join(f"<li>{e(q)}</li>" for q in r.ask_next_time) + "</ul>")
+        out.append(f'<h3>Ask {who} next time</h3><ul class="asks">' + "".join(f"<li>{e(q)}</li>" for q in r.ask_next_time) + "</ul>")
     out.append(f'<p class="foot">Recorded {e(meta.created[:10])} · kept in recipes/{e(meta.id)}/</p></section>')
     return "\n".join(out)
 
@@ -177,7 +192,7 @@ def render_book(archive: Archive, audio_url: Callable[[str], str], inline_assets
         '<!doctype html><html lang="en"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width, initial-scale=1">'
         f"<title>Haath ka Swaad · Kitchen book</title>{fonts}<style>{BOOK_CSS}</style></head><body>"
-        '<div class="bar">The family kitchen book · ▶ plays her voice · <button onclick="print()">Print / save as PDF</button></div>'
+        '<div class="bar">The family kitchen book · ▶ plays the recording · <button onclick="print()">Print / save as PDF</button></div>'
         f"{cover}\n{pages}<script>{BOOK_JS}</script></body></html>"
     )
 

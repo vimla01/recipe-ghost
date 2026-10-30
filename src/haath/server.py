@@ -18,6 +18,7 @@ from haath.config import DEFAULT_PORT, Settings
 from haath.errors import HaathError
 from haath.models import Recipe
 from haath.pipeline import Worker
+from haath.review import all_keys, prune, review_summary
 from haath.storage import Archive
 
 STATIC = Path(str(files("haath") / "static"))
@@ -76,7 +77,9 @@ def create_app(settings: Settings, start_worker: bool = True) -> FastAPI:
         out = []
         for m in archive.list():
             r = archive.load_recipe(m.id) if m.status == "done" else None
-            out.append({**m.model_dump(), "n_ingredients": len(r.ingredients) if r else 0, "n_steps": len(r.steps) if r else 0})
+            rv = review_summary(r, m)
+            out.append({**m.model_dump(), "n_ingredients": len(r.ingredients) if r else 0, "n_steps": len(r.steps) if r else 0,
+                        "review_done": rv["done"], "review_total": rv["total"]})
         return out
 
     @app.post("/api/recipes")
@@ -98,6 +101,7 @@ def create_app(settings: Settings, start_worker: bool = True) -> FastAPI:
             "meta": meta.model_dump(),
             "recipe": r.model_dump() if r else None,
             "transcript": t.model_dump(exclude={"segments": {"__all__": {"words"}}}) if t else None,
+            "review": review_summary(r, meta),
         }
 
     @app.put("/api/recipes/{rid}")
@@ -110,8 +114,29 @@ def create_app(settings: Settings, start_worker: bool = True) -> FastAPI:
         except ValidationError as e:
             raise HaathError(f"That edit doesn't fit the recipe card: {e.errors()[0]['msg']}", "check the fields and save again") from e
         archive.save_recipe(rid, r)
-        archive.update_meta(rid, edited=True, dish=r.dish or meta.dish, cook=r.cook or meta.cook, status="done", error="", fix="")
+        archive.update_meta(rid, edited=True, dish=r.dish or meta.dish, cook=r.cook or meta.cook, status="done", error="", fix="",
+                            reviewed=prune(r, meta.reviewed))  # edited lines need a fresh check
         return {"meta": archive.load_meta(rid).model_dump(), "recipe": r.model_dump()}
+
+    @app.put("/api/recipes/{rid}/review")
+    def review(rid: str, body: dict):
+        """Tick (ok=true) or untick one line: {"key": "...", "ok": true}, or {"keys": [...], "ok": true}."""
+        meta = _get(rid)
+        r = archive.load_recipe(rid)
+        if r is None or meta.status != "done":
+            raise HaathError("There is no finished card to review yet.", "wait until it says ready")
+        keys = body.get("keys") or [body.get("key")]
+        valid = set(all_keys(r))
+        unknown = [k for k in keys if k not in valid]
+        if unknown:
+            raise HaathError("That line has changed since the page loaded.", "refresh the page and tick it again")
+        current = [k for k in meta.reviewed if k in valid]
+        if body.get("ok", True):
+            current += [k for k in keys if k not in current]
+        else:
+            current = [k for k in current if k not in keys]
+        meta = archive.update_meta(rid, reviewed=current)
+        return review_summary(r, meta)
 
     @app.post("/api/recipes/{rid}/redo")
     def redo(rid: str, full: bool = False):

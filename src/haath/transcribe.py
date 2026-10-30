@@ -66,10 +66,26 @@ SENTENCE_END = ("।", "॥", ".", "?", "!")
 CLAUSE_END = (",", ";", ":", "،")
 
 
+def dur(words: list[Word]) -> float:
+    return words[-1].end - words[0].start if words else 0.0
+
+
+def cut_at_pauses(words: list[Word], max_sec: float, min_sec: float = 1.5) -> list[list[Word]]:
+    """Split at the longest silence between two words (keeping both sides >= min_sec), and repeat
+    until every piece is short enough. Pauses are where a speaker naturally ends a thought."""
+    if dur(words) <= max_sec or len(words) < 4:
+        return [words]
+    ks = [k for k in range(1, len(words)) if dur(words[:k]) >= min_sec and dur(words[k:]) >= min_sec]
+    if not ks:
+        return [words]
+    k = max(ks, key=lambda k: (words[k].start - words[k - 1].end, -abs(k - len(words) / 2)))
+    return cut_at_pauses(words[:k], max_sec, min_sec) + cut_at_pauses(words[k:], max_sec, min_sec)
+
+
 def split_long_segments(segments: list[Segment], max_sec: float = 8.0) -> list[Segment]:
     """Whisper (with VAD) often returns 20–30 s segments holding several steps, so ▶ would start
     every one of those steps at the same moment. Re-cut them at sentence ends (then, if still
-    long, at commas) using the word timestamps, so each line starts where she says it."""
+    long, at commas, then at pauses) using the word timestamps, so each line starts where it's said."""
     out: list[Segment] = []
 
     def cut(words: list[Word], marks: tuple[str, ...]) -> list[list[Word]]:
@@ -89,10 +105,9 @@ def split_long_segments(segments: list[Segment], max_sec: float = 8.0) -> list[S
             continue
         pieces: list[list[Word]] = []
         for sentence in cut(seg.words, SENTENCE_END):
-            if sentence[-1].end - sentence[0].start > max_sec:
-                pieces.extend(cut(sentence, CLAUSE_END))
-            else:
-                pieces.append(sentence)
+            for clause in cut(sentence, CLAUSE_END) if dur(sentence) > max_sec else [sentence]:
+                # Whisper often writes Hindi with no punctuation at all: cut at the speaker's pauses.
+                pieces.extend(cut_at_pauses(clause, max_sec) if dur(clause) > max_sec else [clause])
         # Glue tiny fragments ("बस इतना,") onto the previous piece so lines stay readable.
         merged: list[list[Word]] = []
         for p in pieces:
@@ -101,7 +116,7 @@ def split_long_segments(segments: list[Segment], max_sec: float = 8.0) -> list[S
             else:
                 merged.append(p)
         for p in merged:
-            text = "".join(w.word for w in p).strip()
+            text = "".join(w.word for w in p).replace("\ufffd", "").strip()
             if text:
                 out.append(Segment(id=0, start=p[0].start, end=p[-1].end, text=text, words=p))
     for i, s in enumerate(out):
@@ -138,7 +153,9 @@ def transcribe(
         out: list[Segment] = []
         for seg in segments:  # generator: decoding happens here
             words = [Word(start=round(w.start, 2), end=round(w.end, 2), word=w.word) for w in (seg.words or [])]
-            out.append(Segment(id=len(out), start=round(seg.start, 2), end=round(seg.end, 2), text=seg.text.strip(), words=words))
+            # "\ufffd" appears when Whisper splits one Devanagari character across two tokens.
+            text = seg.text.replace("\ufffd", "").strip()
+            out.append(Segment(id=len(out), start=round(seg.start, 2), end=round(seg.end, 2), text=text, words=words))
             if progress and duration:
                 progress(min(0.99, seg.end / duration), f"listening… {int(seg.end // 60)}:{int(seg.end % 60):02d} of {int(duration // 60)}:{int(duration % 60):02d}")
         return Transcript(

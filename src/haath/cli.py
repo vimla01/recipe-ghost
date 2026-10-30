@@ -76,10 +76,10 @@ def cmd_add(args) -> int:
 def _print_done(archive: Archive, rid: str) -> None:
     meta = archive.load_meta(rid)
     recipe = archive.load_recipe(rid)
-    print(f"\n  {recipe.dish or 'Recipe'}, as told by {recipe.cook or 'her'}")
+    print(f"\n  {recipe.dish or 'Recipe'}, as told by {recipe.cook or 'the cook'}")
     print(f"  {len(recipe.ingredients)} ingredients, {len(recipe.steps)} steps, {len(recipe.ask_next_time)} questions for next time")
     if meta.dropped:
-        print(f"  Guard removed {meta.dropped} line(s) the model wrote that she never said:")
+        print(f"  Guard removed {meta.dropped} line(s) the model wrote that were never said:")
         for d in meta.dropped_items:
             print(f"    – {d}")
     print(f"  Saved in {archive.dir(rid)}\n  Open it with: haath ui")
@@ -117,7 +117,7 @@ def cmd_book(args) -> int:
 
     s = _settings(args)
     out = write_book(Archive(s.archive), Path(args.out).expanduser() if args.out else None)
-    print(f"Wrote {out}\nDouble-click it to open; it works offline. Keep it next to the recipes/ folder so her voice plays.")
+    print(f"Wrote {out}\nDouble-click it to open; it works offline. Keep it next to the recipes/ folder so the recordings play.")
     return 0
 
 

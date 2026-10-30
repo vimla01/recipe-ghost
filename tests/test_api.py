@@ -109,3 +109,31 @@ def test_lan_cert_covers_wifi_ip_and_is_reused(tmp_path):
     assert lan_cert(tmp_path, "192.168.1.42")[0].stat().st_mtime_ns == mtime  # reused
     lan_cert(tmp_path, "10.0.0.7")  # Wi-Fi changed → new certificate
     assert "10.0.0.7" in subprocess.run(["openssl", "x509", "-in", str(cert), "-noout", "-ext", "subjectAltName"], capture_output=True, text=True).stdout
+
+
+def test_family_review_ticks_prune_on_edit_and_reset_on_rewrite(client, tmp_path):
+    rid = upload(client, tmp_path)
+    wait_done(client, rid)
+    data = client.get(f"/api/recipes/{rid}").json()
+    rv = data["review"]
+    assert rv["done"] == 0 and rv["total"] == sum(len(v) for v in rv["keys"].values()) > 0
+
+    first_ing, first_step = rv["keys"]["ingredients"][0], rv["keys"]["steps"][0]
+    r = client.put(f"/api/recipes/{rid}/review", json={"keys": [first_ing, first_step], "ok": True}).json()
+    assert r["done"] == 2
+    assert client.put(f"/api/recipes/{rid}/review", json={"key": first_step, "ok": False}).json()["done"] == 1
+    assert client.put(f"/api/recipes/{rid}/review", json={"key": "ing-doesnotexist", "ok": True}).status_code == 400
+    assert client.get("/api/recipes").json()[0]["review_done"] == 1
+
+    # Editing the ticked line un-ticks it: the family only vouches for what they saw.
+    recipe = data["recipe"]
+    recipe["ingredients"][0]["approx"] = "~3 cups"
+    client.put(f"/api/recipes/{rid}", json=recipe)
+    assert client.get(f"/api/recipes/{rid}").json()["review"]["done"] == 0
+
+    # Tick everything → the book says so; a re-write starts the review over.
+    keys = [k for ks in client.get(f"/api/recipes/{rid}").json()["review"]["keys"].values() for k in ks]
+    assert client.put(f"/api/recipes/{rid}/review", json={"keys": keys, "ok": True}).json()["done"] == len(keys)
+    assert "Checked line by line by the family" in client.get("/book").text
+    client.post(f"/api/recipes/{rid}/redo")
+    assert wait_done(client, rid)["reviewed"] == []

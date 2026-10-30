@@ -156,6 +156,33 @@ def _join_names(names: list[str]) -> str:
     return names[0] if len(names) == 1 else ", ".join(names[:-1]) + " and " + names[-1]
 
 
+def translations_lookup(r: Recipe) -> dict[str, str]:
+    return {normalize(t.original): t.english for t in r.translations if t.english}
+
+
+def align_translations(r: Recipe) -> list:
+    """Keep only translations of phrases that are actually on the card (after the guard ran).
+    If the guard corrected a phrase slightly, re-key its translation to the kept text."""
+    shown = [i.her_words for i in r.ingredients] + [s.her_cue for s in r.steps] + r.quotes + r.tips
+    shown = [t for t in shown if t]
+    by_norm = {normalize(t): t for t in shown}
+    kept, seen = [], set()
+    for t in r.translations:
+        english = no_em_dash(t.english.strip())
+        n = normalize(t.original)
+        if not english or not n or normalize(english) == n:
+            continue
+        target = by_norm.get(n)
+        if target is None:
+            best = max(shown, key=lambda x: SequenceMatcher(None, normalize(x), n).ratio(), default=None)
+            if best is not None and SequenceMatcher(None, normalize(best), n).ratio() >= 0.8:
+                target = best
+        if target is not None and normalize(target) not in seen:
+            seen.add(normalize(target))
+            kept.append(t.model_copy(update={"original": target, "english": english}))
+    return kept
+
+
 def no_em_dash(text: str) -> str:
     return re.sub(r"\s*—\s*", ", ", text or "").strip(", ")
 
@@ -322,4 +349,6 @@ def verify_recipe(recipe: Recipe, transcript: Transcript) -> tuple[Recipe, Verif
         if not ok:
             report.unsnapped_steps.append(i)
 
+    # Last: every phrase is final now, so meanings attach to exactly what the card shows.
+    r.translations = align_translations(r)
     return r, report
