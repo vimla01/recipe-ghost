@@ -35,25 +35,45 @@ Cloud transcription apps want an account, a subscription and your grandmother's 
 
 ## Screenshots
 
-| | |
-|---|---|
-| <img src="docs/screenshots/card-top.png" alt="Recipe card, top: her words in handwriting with English meanings and approximate measures"> | <img src="docs/screenshots/card-method.png" alt="Recipe card, method: a play button on every step and her cue in her own words"> |
-| **The recipe card.** Her words are big, in her own script, with a small English meaning underneath. Gemma's estimates sit beside them, marked `~`. | **The method.** Every step has a ▶ that plays her voice from that moment, with her cue ("jab tak tel na chhod de") in her own words. |
+![Home page: the record panel and the family kitchen with live status for each recipe](docs/screenshots/home.png)
 
-| | |
-|---|---|
-| <img src="docs/screenshots/recording.png" alt="Recording in progress: the button becomes Stop and the timer runs"> | <img src="docs/screenshots/playing.png" alt="Playing a step: the step is highlighted and the player bar shows her voice"> |
-| **Recording.** The heading follows the cook's name; the screen stays awake. | **▶ Her voice.** The step lights up while it plays, and stops at the next step. |
-| <img src="docs/screenshots/notes.png" alt="Tips, warnings, her quotes, questions to ask next time and the full transcript"> | <img src="docs/screenshots/review.png" alt="Review mode: a tick on every line and a progress bar of lines checked by the family"> |
-| **Tips, quotes, "Ask Nani next time"** and the full transcript with tap-to-play times. | **Review with her.** Go through the card together and tick every line that's right. Edited lines need a fresh tick. |
-| <img src="docs/screenshots/edit.png" alt="Edit mode: every field can be fixed by hand"> | <img src="docs/screenshots/book.png" alt="Kitchen book: cover with contents and one recipe per printed page"> |
-| **Edit.** Fix anything Whisper or Gemma got wrong. | **Kitchen book.** One recipe per page, prints to PDF, opens offline. Fully checked recipes say so. |
-| <img src="docs/screenshots/mobile.png" alt="The recipe card on a phone" width="320"> | |
-| **On a phone** on the kitchen counter (`haath ui --lan`). | |
+**The family kitchen.** Record or upload a voice note on the left; every recipe on the right, with live status.
 
-<p align="center"><img src="docs/screenshots/home.png" alt="Home page: the marigold toran, the record panel and the family kitchen with live status for each recipe" width="900"></p>
+![Recipe card, top: the cook's words with English meanings and approximate measures](docs/screenshots/card-top.png)
 
-<p align="center"><b>The family kitchen.</b> Record (or upload a voice note) on the left; every recipe on the right, with live status while Whisper and Gemma work.</p>
+**The recipe card.** The cook's words in their own script, with an English meaning underneath and Gemma's `~` estimates beside them.
+
+![Recipe card, method: a play button on every step](docs/screenshots/card-method.png)
+
+**The method.** Every step has a ▶ that plays the cook's voice from that moment.
+
+![Recording in progress](docs/screenshots/recording.png)
+
+**Recording.** The heading follows the cook's name; the screen stays awake.
+
+![Playing a step](docs/screenshots/playing.png)
+
+**Playback.** The step lights up while it plays and stops at the next one.
+
+![Tips, quotes, questions and the transcript](docs/screenshots/notes.png)
+
+**Notes.** Tips, quotes, "Ask next time" questions and the full transcript with tap-to-play times.
+
+![Review mode with ticks and a progress bar](docs/screenshots/review.png)
+
+**Review.** Go through the card with the cook and tick each line. Edited lines need a fresh tick.
+
+![Edit mode](docs/screenshots/edit.png)
+
+**Edit.** Fix anything Whisper or Gemma got wrong.
+
+![Kitchen book](docs/screenshots/book.png)
+
+**Kitchen book.** One recipe per page, prints to PDF, works offline.
+
+<img src="docs/screenshots/mobile.png" alt="The recipe card on a phone" width="320">
+
+**On a phone** on the kitchen counter (`haath ui --lan`).
 
 <sub>Screenshots use the built-in sample recipe (`haath ui --mock`), not a real family recording.</sub>
 
@@ -148,58 +168,41 @@ After step 3 you can turn Wi-Fi off. `haath doctor` tells you exactly what's mis
 | `haath add voice.m4a --cook "Mummy" --dish "Dal Baati"` | Add an existing phone voice note |
 | `haath list` | All recipes with status |
 | `haath redo <id>` | Re-run Gemma (e.g. after `--model` change); `--full` also re-transcribes |
-| `haath book` | Writes `book.html`: every recipe, printable, plays her voice offline |
+| `haath book` | Writes `book.html`: every recipe, printable, plays the cook's voice offline |
 | `haath doctor` | Checks Whisper model, Ollama and the Gemma model |
 
-Useful flags (any command): `--lang hi|mr|gu|en` to force the language, `--whisper-model small` for
-slow laptops, `--model gemma4:e2b` for a smaller/faster Gemma, `--num-ctx 8192` to use less RAM,
-`--archive PATH`. Environment: `OLLAMA_HOST`, `HAATH_ARCHIVE`, `HAATH_MODEL`, `HAATH_WHISPER_MODEL`.
+**Flags:** `--lang hi|mr|gu|en`, `--whisper-model small`, `--model gemma4:e2b`, `--num-ctx 8192`,
+`--archive PATH`. **Env:** `OLLAMA_HOST`, `HAATH_ARCHIVE`, `HAATH_MODEL`, `HAATH_WHISPER_MODEL`.
 
-**Tips for a good recording**
+**Recording tips**
 
-- Not just Mummy and Nani: Dad, Dadu, Chachi, anyone. The card uses the cook's name everywhere
-  ("Hear Dad from the start", "Ask Dad next time").
-- *Ask her first.* Tell her what it's for. Most nanis love this once they understand.
-- Phone on the counter? Run `haath ui --lan`, open the `https://192.168.…` address it prints on the
-  phone, accept the one-time certificate warning (it's your laptop's own), and press Record.
-- Put the phone/laptop about a metre away, not next to the pressure cooker or exhaust fan.
-- Ask her to *say* what she's doing: "ab kitna daala?", "kab tak?" The card can only use what she says.
-- Long is fine. 20–40 minute recordings are split into parts and merged.
-- Afterwards, read the **Ask her next time** list, and actually ask her.
+- Anyone who cooks: Mummy, Papa, Nani, Dadu, Chachi. The card uses their name everywhere.
+- Ask first, and explain what it's for.
+- Phone on the counter? Run `haath ui --lan`, open the printed `https://` address, accept the certificate once.
+- Keep the mic ~1 m away, away from the cooker and exhaust fan.
+- Ask them to *say* what they're doing ("kitna daala?", "kab tak?"). The card only uses what's said.
+- Long recordings are fine; they're split and merged.
+- Afterwards, actually ask the **Ask next time** questions.
 
-**How long does it take?** Measured on a CPU-only laptop (Intel i5-1334U, 16 GB RAM, already
-deep in swap from other apps), for an 85-second Hindi recording: Whisper large-v3-turbo took
-~1 min to load plus ~2.3 min to transcribe; Gemma 4 e4b took ~12 min to write the card.
-Gemma needs several GB of *free* RAM; on a laptop that isn't swapping it is much faster. If it's slow:
-close heavy apps (browsers with many tabs, Docker/Kubernetes), or use `--model gemma4:e2b`,
-`--num-ctx 8192` and `--whisper-model small`. A GPU makes both much faster. You can close the
-browser tab while it works; the status shows when it's done.
+**Speed.** On a CPU-only i5 laptop (16 GB, swapping), an 85-second clip took ~3 min in Whisper and
+~12 min in Gemma. Too slow? Close heavy apps or use `--model gemma4:e2b --num-ctx 8192 --whisper-model small`.
+A GPU helps a lot. You can close the tab while it works.
 
-## Privacy: why local and open matters
+## Privacy
 
-- **Her voice never touches a server.** Recordings of elders, family stories, a grandmother laughing
-  at her own joke: that is about as personal as data gets. Here it stays in a folder on your disk.
-- **Works with Wi-Fi off.** After the one-time model downloads, there is no network access at all.
-  The UI binds to 127.0.0.1 and uses no CDNs; fonts are bundled.
-- **No subscription that can disappear.** No account, no API key, no company that can shut down and
-  take the family recipes with it. The archive is plain JSON + audio files you can copy anywhere.
-- **Swap models freely.** Whisper and Gemma are open models. Use a newer Gemma, a regional
-  fine-tune, or a bigger model on a better laptop: `--model …`, then `haath redo <id>`.
+- **Nothing leaves your laptop.** No server ever hears the recordings.
+- **Works offline** after the one-time model download. No CDNs; fonts are bundled.
+- **No account, no subscription.** The archive is plain JSON + audio you can copy anywhere.
+- **Open models.** Swap in any Whisper or Gemma with `--model …`, then `haath redo <id>`.
 
 ## Limitations
 
-- **Accents and dialects.** Whisper is good at Hindi and decent at Marathi/Gujarati, but strong
-  regional dialects, Marwari/Bhojpuri words and fast code-switching will produce mistakes.
-  Use **Edit** to fix them. You know her better than the machine does.
-- **Noisy kitchens.** Pressure-cooker whistles, mixer-grinders and exhaust fans hurt accuracy.
-- **Shared amounts.** "Teeno dal mila ke ek katori" is one katori for the mix. The guard merges
-  such items into one line ("~1 cup all together") when she says a "together" word (mila ke,
-  teeno, dono…); if she doesn't, they may show as ~1 cup each, but her words beside them show the truth.
-- **Approximate measures are estimates.** "Ek mutthi" depends on whose fist. The `approx` column is
-  Gemma's guess and is always marked `~`. Her words come first.
-- **The guard checks wording, not meaning.** It removes quotes and measures that aren't in the
-  transcript, but it can't know whether a step's English summary is perfect. That's what **Review** is
-  for: read the card with her and tick each line.
+- **Dialects.** Strong regional accents and fast code-switching cause mistakes. Fix them with **Edit**.
+- **Noise.** Cooker whistles, mixers and fans hurt accuracy.
+- **Shared amounts.** "Teeno dal mila ke ek katori" is merged into one line only if a "together" word
+  is said; otherwise each may show ~1 cup. The cook's own words are always shown beside it.
+- **Measures are estimates.** `~` values are Gemma's guess; the cook's words come first.
+- **The guard checks wording, not meaning.** Use **Review** with the cook to confirm each line.
 
 ## Development
 
