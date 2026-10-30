@@ -1,0 +1,29 @@
+{
+  "language": "hi",
+  "language_probability": 0.97,
+  "duration": 143.0,
+  "whisper_model": "mock",
+  "segments": [
+    {"id": 0, "start": 0.0, "end": 5.2, "text": "बेटा, आज मैं तुम्हें दाल बाटी बनाना सिखाती हूँ।"},
+    {"id": 1, "start": 5.2, "end": 11.8, "text": "ये तुम्हारे नानाजी की सबसे पसंदीदा थी, हर दिवाली पे बनती थी।"},
+    {"id": 2, "start": 11.8, "end": 19.5, "text": "सबसे पहले एक बड़ा कटोरा आटा लो, और उसमें दो मुट्ठी सूजी।"},
+    {"id": 3, "start": 19.5, "end": 27.0, "text": "अंदाज़ से नमक, और थोड़ी सी अजवाइन, हाथ से मसल के डालना।"},
+    {"id": 4, "start": 27.0, "end": 33.4, "text": "अब घी डालो, खूब सारा घी, मोयन अच्छा होना चाहिए।"},
+    {"id": 5, "start": 33.4, "end": 40.1, "text": "मुट्ठी में दबाओ तो लड्डू जैसा बंध जाए, बस इतना।"},
+    {"id": 6, "start": 40.1, "end": 48.6, "text": "Phir thoda thoda paani daal ke sakht aata goondhna, naram nahi."},
+    {"id": 7, "start": 48.6, "end": 53.0, "text": "Aate ko das minute dhak ke rakh do."},
+    {"id": 8, "start": 53.0, "end": 61.7, "text": "अब छोटी छोटी लोइयां बनाओ, बीच में अंगूठे से हल्का सा दबा देना।"},
+    {"id": 9, "start": 61.7, "end": 68.9, "text": "ओवन को दो सौ डिग्री पे गरम करो, या तंदूर हो तो और अच्छा।"},
+    {"id": 10, "start": 68.9, "end": 77.5, "text": "बाटी को पलटते रहना, जब तक सुनहरी न हो जाए और फटने लगे।"},
+    {"id": 11, "start": 77.5, "end": 84.2, "text": "Garam garam baati ko ghee mein dubo dena, poora doobna chahiye."},
+    {"id": 12, "start": 84.2, "end": 92.0, "text": "अब दाल। तुअर, चना और मूंग, तीनों मिला के, एक कटोरी।"},
+    {"id": 13, "start": 92.0, "end": 98.4, "text": "Cooker mein haldi aur namak daal ke teen seeti."},
+    {"id": 14, "start": 98.4, "end": 106.1, "text": "तड़के के लिए घी गरम करो, उसमें जीरा, हींग, और लाल मिर्च।"},
+    {"id": 15, "start": 106.1, "end": 111.0, "text": "Jab tak jeera chatakne na lage, tab tak ruko."},
+    {"id": 16, "start": 111.0, "end": 119.3, "text": "फिर प्याज़ टमाटर, और मसाला भूनो जब तक तेल न छोड़ दे।"},
+    {"id": 17, "start": 119.3, "end": 126.0, "text": "Dhakkan mat kholna jab dal ubal rahi ho, ubal ke gir jaayegi."},
+    {"id": 18, "start": 126.0, "end": 131.5, "text": "Aakhir mein hara dhaniya aur thoda sa nimbu."},
+    {"id": 19, "start": 131.5, "end": 137.0, "text": "खाना हमेशा प्यार से बनाओ, स्वाद अपने आप आता है।"},
+    {"id": 20, "start": 137.0, "end": 143.0, "text": "बाकी तुम खुद बना के देखो, हाथ से ही आता है अंदाज़।"}
+  ]
+}
