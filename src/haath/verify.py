@@ -126,6 +126,22 @@ class TranscriptIndex:
         return max(matches, key=lambda m: m.score) if matches else None
 
 
+# Number words in Hindi/Marathi/Gujarati (both scripts) and English: if none of these and no digit
+# is in her words, she did not state an amount, so the estimate can't be "high" confidence.
+NUMBER_WORDS = set(
+    "ek do teen tin char chaar paanch panch chhe chhah saat aath nau das aadha adha sava dedh dhai dhaai "
+    "pav paav paune don tran chaar pach saha ardha "
+    "एक दो तीन चार पांच पाँच छह छः सात आठ नौ दस आधा आधी सवा डेढ़ ढाई पाव पौने दोन तीन पाच सहा अर्धा "
+    "એક બે ત્રણ ચાર પાંચ અડધો અડધી "
+    "one two three four five six half quarter dozen".split()
+)
+
+
+def says_a_number(text: str) -> bool:
+    toks = tokens(text)
+    return any(ch.isdigit() for ch in text) or any(t in NUMBER_WORDS for t in toks)
+
+
 @dataclass
 class VerifyReport:
     dropped: list[str] = field(default_factory=list)  # human-readable "quote: …"
@@ -221,6 +237,8 @@ def verify_recipe(recipe: Recipe, transcript: Transcript) -> tuple[Recipe, Verif
             ing.approx = "~" + ing.approx.strip()
         if ing.approx and not any(ch.isdigit() for ch in ing.approx) and "pinch" not in ing.approx.lower():
             ing.confidence = "low"  # "~to taste" is not an estimate; never show it as confident
+        elif ing.confidence == "high" and not says_a_number(ing.her_words):
+            ing.confidence = "med"  # "high" only when she actually said an amount
 
     # The same line listed as both a tip and a warning reads as a glitch; keep it as a warning.
     warned = {normalize(w) for w in r.warnings}

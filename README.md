@@ -157,6 +157,8 @@ browser tab while it works; the status shows when it's done.
 - **Noisy kitchens.** Pressure-cooker whistles, mixer-grinders and exhaust fans hurt accuracy.
 - **Approximate measures are estimates.** "Ek mutthi" depends on whose fist. The `approx` column is
   Gemma's guess and is always marked `~`. Her words come first.
+- **Shared amounts get split.** "Teeno dal mila ke ek katori" (one katori of three dals together)
+  sometimes comes out as ~1 cup *each*. Her words are shown right beside it, so it's easy to spot — fix it with Edit.
 - **The guard checks wording, not meaning.** It removes quotes and measures that aren't in the
   transcript, but it can't know whether a step's English summary is perfect. Read the card once.
 - **Mic on a phone over Wi-Fi.** `haath ui --lan` lets a phone open the UI, but phone browsers only

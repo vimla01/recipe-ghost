@@ -99,3 +99,13 @@ def test_tip_that_is_also_a_warning_kept_once(hindi_transcript):
     r = Recipe(tips=["Dhakkan mat kholna!", "Use desi ghee"], warnings=["dhakkan mat kholna"])
     out, _ = verify_recipe(r, hindi_transcript)
     assert out.tips == ["Use desi ghee"] and out.warnings == ["dhakkan mat kholna"]
+
+
+def test_high_confidence_needs_a_spoken_number(hindi_transcript):
+    r = Recipe(ingredients=[
+        Ingredient(name="Turmeric", her_words="", approx="~1/2 tsp", confidence="high"),
+        Ingredient(name="Flour", her_words="एक मुट्ठी आटा", approx="~1 cup", confidence="high"),
+        Ingredient(name="Water", her_words="do cup paani", approx="~2 cups", confidence="high"),
+    ])
+    out, _ = verify_recipe(r, hindi_transcript)
+    assert [i.confidence for i in out.ingredients] == ["med", "high", "med"]  # "do cup paani" isn't in the transcript → dropped → med
