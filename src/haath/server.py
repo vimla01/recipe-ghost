@@ -157,22 +157,65 @@ def serve(settings: Settings, port: int = DEFAULT_PORT, open_browser: bool = Tru
         except OSError as e:
             raise HaathError(f"Port {port} is already in use (is haath ui already open?).", f"open http://127.0.0.1:{port}/  or run: haath ui --port {port + 1}") from e
     app = create_app(settings)
-    url = f"http://127.0.0.1:{port}/"
+    ssl: dict = {}
+    ip = ""
+    if lan:
+        ip = lan_ip()
+        cert, key = lan_cert(settings.archive, ip)
+        ssl = {"ssl_certfile": str(cert), "ssl_keyfile": str(key)}
+    url = f"{'https' if lan else 'http'}://127.0.0.1:{port}/"
     print(f"\n  Haath ka Swaad is open at {url}")
     print(f"  Recipes are kept in {settings.archive}")
     if settings.mock:
         print("  Mock mode: recordings use a sample transcript + reply (no Whisper/Ollama).")
     if lan:
-        try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            s.connect(("10.255.255.255", 1))
-            ip = s.getsockname()[0]
-            s.close()
-        except OSError:
-            ip = "<this-laptop's-ip>"
-        print(f"  On your Wi-Fi: http://{ip}:{port}/  (anyone on this network can open it)")
-        print("  Note: phones only allow the mic on https or localhost — on the phone, upload a voice note instead.")
-    print("  Press Ctrl+C to close.\n")
+        print(f"  On your Wi-Fi (phone on the kitchen counter): https://{ip}:{port}/")
+        print("  The phone will warn about the certificate once — it's this laptop's own, made just now.")
+        print("  Tap Advanced → Proceed, then the Record button works on the phone too.")
+        print("  Anyone on this Wi-Fi can open the page while it runs; stop with Ctrl+C when done.")
+    print("  Press Ctrl+C to close.\n", flush=True)
     if open_browser:
         threading.Timer(1.0, lambda: webbrowser.open(url)).start()
-    uvicorn.run(app, host=host, port=port, log_level="warning")
+    uvicorn.run(app, host=host, port=port, log_level="warning", **ssl)
+
+
+def lan_ip() -> str:
+    import socket
+
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.connect(("10.255.255.255", 1))  # no packet is sent; this just picks the Wi-Fi interface
+            return s.getsockname()[0]
+    except OSError as e:
+        raise HaathError("Could not find this laptop's Wi-Fi address.", "connect to Wi-Fi, or run without --lan") from e
+
+
+def lan_cert(archive: Path, ip: str) -> tuple[Path, Path]:
+    """A self-signed certificate for --lan, so phone browsers treat the page as secure and allow
+    the microphone. Made once with the system openssl; remade if the Wi-Fi address changes."""
+    import shutil
+    import subprocess
+
+    d = archive / ".lan-cert"
+    cert, key, stamp = d / "cert.pem", d / "key.pem", d / "ip.txt"
+    if cert.exists() and key.exists() and stamp.exists() and stamp.read_text().strip() == ip:
+        return cert, key
+    if not shutil.which("openssl"):
+        raise HaathError(
+            "--lan needs openssl to make a local https certificate (phones only allow the mic on https).",
+            "install it (Ubuntu: sudo apt install openssl · macOS: already installed · Windows: winget install ShiningLight.OpenSSL)",
+        )
+    d.mkdir(parents=True, exist_ok=True)
+    cmd = [
+        "openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-days", "825",
+        "-keyout", str(key), "-out", str(cert), "-subj", "/CN=Haath ka Swaad (this laptop)",
+        "-addext", f"subjectAltName=DNS:localhost,IP:127.0.0.1,IP:{ip}",
+    ]
+    try:
+        subprocess.run(cmd, check=True, capture_output=True, timeout=60)
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
+        err = getattr(e, "stderr", b"") or b""
+        raise HaathError(f"openssl could not make the certificate: {err.decode(errors='replace').strip()[:200]}", "update openssl (1.1.1 or newer), or run without --lan") from e
+    key.chmod(0o600)
+    stamp.write_text(ip)
+    return cert, key

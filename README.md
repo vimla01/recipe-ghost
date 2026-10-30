@@ -36,6 +36,11 @@ Cloud transcription apps want an account, a subscription and your grandmother's 
 
 ## How it works
 
+![How Haath ka Swaad works: her voice → Whisper → Gemma → guard → recipe card, all on your laptop](docs/how-it-works.svg)
+
+<details>
+<summary>Text version</summary>
+
 ```
    🎙  browser MediaRecorder / phone voice note
     │
@@ -60,6 +65,8 @@ Cloud transcription apps want an account, a subscription and your grandmother's 
  │                                                                            │
  └──────────────────── no network calls · works with Wi-Fi off ───────────────┘
 ```
+
+</details>
 
 One background worker handles one recording at a time, so Whisper and Gemma never fight over the CPU.
 Each recipe lives in its own folder:
@@ -86,8 +93,10 @@ comes bundled with faster-whisper (PyAV).
 # 1. Ollama — https://ollama.com/download  (Linux: curl -fsSL https://ollama.com/install.sh | sh)
 ollama pull gemma4:e4b
 
-# 2. Haath ka Swaad
-uv tool install .            # or: pipx install .   or: pip install .
+# 2. Haath ka Swaad (from this folder)
+pipx install .               # or: uv tool install .
+# Ubuntu/Debian: plain `pip install .` is blocked (PEP 668) — use pipx (sudo apt install pipx)
+# Then run once and open a new terminal so `haath` is on your PATH: pipx ensurepath
 
 # 3. One-time Whisper download (~1.6 GB), then check everything
 haath doctor --download
@@ -112,6 +121,7 @@ After step 3 you can turn Wi-Fi off. `haath doctor` tells you exactly what's mis
 | Command | What it does |
 |---|---|
 | `haath ui [archive]` | Opens http://127.0.0.1:8767 — record, watch status, read and edit cards |
+| `haath ui --lan` | Also serves https on your Wi-Fi, so the phone on the kitchen counter can record too |
 | `haath add voice.m4a --cook "Mummy" --dish "Dal Baati"` | Add an existing phone voice note |
 | `haath list` | All recipes with status |
 | `haath redo <id>` | Re-run Gemma (e.g. after `--model` change); `--full` also re-transcribes |
@@ -125,6 +135,8 @@ slow laptops, `--model gemma4:e2b` for a smaller/faster Gemma, `--num-ctx 8192` 
 **Tips for a good recording**
 
 - *Ask her first.* Tell her what it's for. Most nanis love this once they understand.
+- Phone on the counter? Run `haath ui --lan`, open the `https://192.168.…` address it prints on the
+  phone, accept the one-time certificate warning (it's your laptop's own), and press Record.
 - Put the phone/laptop about a metre away, not next to the pressure cooker or exhaust fan.
 - Ask her to *say* what she's doing: "ab kitna daala?", "kab tak?" — the card can only use what she says.
 - Long is fine. 20–40 minute recordings are split into parts and merged.
@@ -155,14 +167,13 @@ browser tab while it works; the status shows when it's done.
   regional dialects, Marwari/Bhojpuri words and fast code-switching will produce mistakes.
   Use **Edit** to fix them — you know her better than the machine does.
 - **Noisy kitchens.** Pressure-cooker whistles, mixer-grinders and exhaust fans hurt accuracy.
+- **Shared amounts.** "Teeno dal mila ke ek katori" is one katori for the mix. The guard merges
+  such items into one line ("~1 cup all together") when she says a "together" word (mila ke,
+  teeno, dono…); if she doesn't, they may show as ~1 cup each — her words beside them show the truth.
 - **Approximate measures are estimates.** "Ek mutthi" depends on whose fist. The `approx` column is
   Gemma's guess and is always marked `~`. Her words come first.
-- **Shared amounts get split.** "Teeno dal mila ke ek katori" (one katori of three dals together)
-  sometimes comes out as ~1 cup *each*. Her words are shown right beside it, so it's easy to spot — fix it with Edit.
 - **The guard checks wording, not meaning.** It removes quotes and measures that aren't in the
   transcript, but it can't know whether a step's English summary is perfect. Read the card once.
-- **Mic on a phone over Wi-Fi.** `haath ui --lan` lets a phone open the UI, but phone browsers only
-  allow the microphone on https/localhost — record with the phone's voice recorder and upload instead.
 
 ## Development
 

@@ -93,3 +93,19 @@ def test_book_live_and_offline_file(client, tmp_path):
     assert f'data-src="recipes/{rid}/voice-demo.wav"' in html  # relative, opens offline
     assert "data:font/woff2;base64," in html and "/static/" not in html
     assert "Dal baati is the taste of Rajasthan" not in html  # the invented quote never reaches the book
+
+
+@pytest.mark.skipif(__import__("shutil").which("openssl") is None, reason="openssl not installed")
+def test_lan_cert_covers_wifi_ip_and_is_reused(tmp_path):
+    import subprocess
+
+    from haath.server import lan_cert
+
+    cert, key = lan_cert(tmp_path, "192.168.1.42")
+    san = subprocess.run(["openssl", "x509", "-in", str(cert), "-noout", "-ext", "subjectAltName"], capture_output=True, text=True).stdout
+    assert "192.168.1.42" in san and "127.0.0.1" in san
+    assert key.stat().st_mode & 0o077 == 0  # private key readable by the owner only
+    mtime = cert.stat().st_mtime_ns
+    assert lan_cert(tmp_path, "192.168.1.42")[0].stat().st_mtime_ns == mtime  # reused
+    lan_cert(tmp_path, "10.0.0.7")  # Wi-Fi changed → new certificate
+    assert "10.0.0.7" in subprocess.run(["openssl", "x509", "-in", str(cert), "-noout", "-ext", "subjectAltName"], capture_output=True, text=True).stdout

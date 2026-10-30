@@ -207,7 +207,9 @@ function recordPanel() {
   const start = async () => {
     banner();
     if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
-      banner("This browser can't record here.", "open http://127.0.0.1:8767 in Chrome, Edge or Firefox — or upload a voice note");
+      banner("This browser can't record here.", window.isSecureContext
+        ? "use Chrome, Edge, Firefox or Safari — or upload a voice note"
+        : "phones need https: start it with  haath ui --lan  and open the https:// address — or upload a voice note");
       return;
     }
     try {

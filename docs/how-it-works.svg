@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" width="1200" height="700" role="img" aria-labelledby="t d">
+  <title id="t">How Haath ka Swaad works</title>
+  <desc id="d">Her voice is recorded in the browser or added as a phone voice note. On the laptop, faster-whisper transcribes it with word timestamps, Gemma via Ollama writes a recipe card as JSON, and a guard checks every quote and measure against the transcript and snaps steps to the moment she said them. The output is a seekable voice file, the transcript and recipe.json, shown as a recipe card whose play buttons play her voice, and a printable offline kitchen book. No network calls; works with Wi-Fi off.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#8f1d21"/>
+    </marker>
+    <symbol id="flower" viewBox="0 0 40 40">
+      <g fill="#e8890c"><circle cx="20" cy="9" r="7"/><circle cx="31" cy="15" r="7"/><circle cx="29" cy="28" r="7"/><circle cx="16" cy="31" r="7"/><circle cx="9" cy="19" r="7"/></g>
+      <g fill="#f5b324"><circle cx="20" cy="13" r="5"/><circle cx="27" cy="17" r="5"/><circle cx="25" cy="25" r="5"/><circle cx="17" cy="26" r="5"/><circle cx="13" cy="19" r="5"/></g>
+      <circle cx="20" cy="20" r="4.5" fill="#c9600a"/>
+    </symbol>
+    <style>
+      .serif { font-family: Georgia, "Tiro Devanagari Hindi", "Noto Serif Devanagari", serif; }
+      .sans { font-family: "Mukta", "Segoe UI", "Noto Sans", "Noto Sans Devanagari", Helvetica, Arial, sans-serif; }
+      .card { fill: #fffaf0; stroke: #e6d3b3; stroke-width: 1.5; }
+      .title { font-size: 22px; fill: #8f1d21; }
+      .sub { font-size: 14.5px; fill: #9a8270; font-style: italic; }
+      .li { font-size: 15.5px; fill: #3b2417; }
+      .file { font-size: 16px; fill: #3b2417; font-weight: 600; }
+      .filesub { font-size: 13px; fill: #9a8270; }
+      .flow { stroke: #8f1d21; stroke-width: 2; fill: none; }
+    </style>
+  </defs>
+
+  <rect width="1200" height="700" fill="#f6ead3"/>
+
+  <!-- input -->
+  <rect x="60" y="28" width="340" height="56" rx="28" fill="#8f1d21"/>
+  <g transform="translate(88 42)" fill="#fff6e6">
+    <rect x="6" y="0" width="12" height="18" rx="6"/>
+    <path d="M1 12 a11 11 0 0 0 22 0" stroke="#fff6e6" stroke-width="2.2" fill="none"/>
+    <rect x="11" y="23" width="2.2" height="6"/>
+  </g>
+  <text x="128" y="55" class="serif" font-size="19" fill="#fff6e6">Her voice, while she cooks</text>
+  <text x="128" y="74" class="sans" font-size="13" fill="#f9d9a8">browser recording · phone voice note</text>
+  <text x="440" y="62" class="serif" font-size="17" fill="#6e5442" font-style="italic">“thoda sa haldi, jab tak khushboo na aaye…”</text>
+
+  <!-- laptop -->
+  <rect x="30" y="112" width="1140" height="530" rx="22" fill="#fbf4e6" stroke="#c9a978" stroke-width="2" stroke-dasharray="9 7"/>
+  <text x="1140" y="146" text-anchor="end" class="sans" font-size="13.5" fill="#6e5442" letter-spacing="1.5">YOUR LAPTOP · NO NETWORK CALLS · WORKS WITH WI-FI OFF</text>
+  <use href="#flower" x="44" y="98" width="30" height="30"/>
+  <use href="#flower" x="1126" y="98" width="30" height="30"/>
+
+  <path class="flow" d="M230 84 V170" marker-end="url(#arrow)"/>
+
+  <!-- 1 whisper -->
+  <rect class="card" x="60" y="172" width="340" height="224" rx="16"/>
+  <circle cx="90" cy="206" r="16" fill="#8f1d21"/><text x="90" y="212" text-anchor="middle" class="sans" font-size="16" font-weight="700" fill="#fff">1</text>
+  <text x="116" y="204" class="serif title">Listen</text>
+  <text x="116" y="225" class="sans sub">faster-whisper · large-v3-turbo</text>
+  <g class="sans li">
+    <circle cx="86" cy="264" r="4" fill="#e8890c"/><text x="100" y="269">timestamps for every word</text>
+    <circle cx="86" cy="296" r="4" fill="#e8890c"/><text x="100" y="301">auto: Hindi · Marathi · Gujarati · English</text>
+    <circle cx="86" cy="328" r="4" fill="#e8890c"/><text x="100" y="333">long lines re-cut at । . ? !</text>
+    <circle cx="86" cy="360" r="4" fill="#e8890c"/><text x="100" y="365">webm / m4a / opus — no ffmpeg</text>
+  </g>
+
+  <path class="flow" d="M402 284 H426" marker-end="url(#arrow)"/>
+
+  <!-- 2 gemma -->
+  <rect class="card" x="430" y="172" width="340" height="224" rx="16"/>
+  <circle cx="460" cy="206" r="16" fill="#8f1d21"/><text x="460" y="212" text-anchor="middle" class="sans" font-size="16" font-weight="700" fill="#fff">2</text>
+  <text x="486" y="204" class="serif title">Write the card</text>
+  <text x="486" y="225" class="sans sub">Gemma via Ollama · gemma4:e4b</text>
+  <g class="sans li">
+    <circle cx="456" cy="264" r="4" fill="#e8890c"/><text x="470" y="269">reply locked to the Recipe JSON schema</text>
+    <circle cx="456" cy="296" r="4" fill="#e8890c"/><text x="470" y="301">her words kept, ~measures added</text>
+    <circle cx="456" cy="328" r="4" fill="#e8890c"/><text x="470" y="333">long recordings: chunk → merge</text>
+    <circle cx="456" cy="360" r="4" fill="#e8890c"/><text x="470" y="365">thinking off · temperature 0.1</text>
+  </g>
+
+  <path class="flow" d="M772 284 H796" marker-end="url(#arrow)"/>
+
+  <!-- 3 guard -->
+  <rect class="card" x="800" y="172" width="340" height="224" rx="16" stroke="#5d7a33" stroke-width="2.2"/>
+  <circle cx="830" cy="206" r="16" fill="#5d7a33"/><text x="830" y="212" text-anchor="middle" class="sans" font-size="16" font-weight="700" fill="#fff">3</text>
+  <text x="856" y="204" class="serif title" fill="#4f6b2f">The guard</text>
+  <text x="856" y="225" class="sans sub">nothing she didn’t say gets through</text>
+  <g class="sans li">
+    <circle cx="826" cy="264" r="4" fill="#5d7a33"/><text x="840" y="269">every quote &amp; measure must be heard</text>
+    <circle cx="826" cy="296" r="4" fill="#5d7a33"/><text x="840" y="301">Devanagari + Hinglish normalized</text>
+    <circle cx="826" cy="328" r="4" fill="#5d7a33"/><text x="840" y="333">invented lines dropped &amp; counted</text>
+    <circle cx="826" cy="360" r="4" fill="#5d7a33"/><text x="840" y="365">each step snapped to her moment</text>
+  </g>
+
+  <!-- files -->
+  <path class="flow" d="M180 396 L165 440" marker-end="url(#arrow)"/>
+  <path class="flow" d="M290 396 L375 440" marker-end="url(#arrow)"/>
+  <path class="flow" d="M970 396 V440" marker-end="url(#arrow)"/>
+
+  <rect class="card" x="60" y="444" width="210" height="64" rx="12"/>
+  <text x="80" y="472" class="sans file">voice.m4a</text>
+  <text x="80" y="494" class="sans filesub">her voice, seekable</text>
+
+  <rect class="card" x="290" y="444" width="210" height="64" rx="12"/>
+  <text x="310" y="472" class="sans file">transcript.json</text>
+  <text x="310" y="494" class="sans filesub">every line, with its time</text>
+
+  <rect class="card" x="870" y="444" width="210" height="64" rx="12"/>
+  <text x="890" y="472" class="sans file">recipe.json</text>
+  <text x="890" y="494" class="sans filesub">the checked card · editable</text>
+
+  <path class="flow" d="M165 508 V550" marker-end="url(#arrow)"/>
+  <path class="flow" d="M395 508 V550" marker-end="url(#arrow)"/>
+  <path class="flow" d="M975 508 V550" marker-end="url(#arrow)"/>
+
+  <!-- result -->
+  <rect x="60" y="554" width="1080" height="66" rx="16" fill="#e8890c"/>
+  <circle cx="102" cy="587" r="20" fill="#fff6e6"/><path d="M96 577 v20 l17 -10 z" fill="#c9600a"/>
+  <text x="136" y="582" class="serif" font-size="21" fill="#fff">Recipe card — her words big, estimates small, ▶ plays her voice at each step</text>
+  <text x="136" y="606" class="sans" font-size="14.5" fill="#fff3dc">+ “Ask her next time” questions  ·  Kitchen book: book.html, one recipe per page, opens offline</text>
+
+  <text x="600" y="676" text-anchor="middle" class="serif" font-size="17" fill="#6e5442" font-style="italic">No account. No API key. No server. Her voice stays in the family.</text>
+</svg>

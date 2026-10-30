@@ -109,3 +109,34 @@ def test_high_confidence_needs_a_spoken_number(hindi_transcript):
     ])
     out, _ = verify_recipe(r, hindi_transcript)
     assert [i.confidence for i in out.ingredients] == ["med", "high", "med"]  # "do cup paani" isn't in the transcript → dropped → med
+
+
+def test_shared_amount_merged_into_one_ingredient():
+    from conftest import make_transcript
+
+    t = make_transcript([
+        (55.5, "अब दाल, तुर, चना और मूंग,"),
+        (58.4, "तीनों मिला के एक कटोरी,"),
+        (61.3, "कुकर में हल्दी और नमक दाल के तीन सीटी,"),
+    ])
+    r = Recipe(ingredients=[
+        Ingredient(name="Tur dal", her_words="तुर", approx="~1 cup", confidence="med"),
+        Ingredient(name="Chana dal", her_words="चना", approx="~1 cup", confidence="high"),
+        Ingredient(name="Moong dal", her_words="मूंग", approx="~1 cup", confidence="med"),
+        Ingredient(name="Turmeric", her_words="हल्दी", approx="~1/2 tsp", confidence="low"),
+        Ingredient(name="Salt", her_words="नमक", approx="~1/2 tsp", confidence="low"),  # same estimate, no "together" word
+    ])
+    out, _ = verify_recipe(r, t)
+    assert [i.name for i in out.ingredients] == ["Tur dal, Chana dal and Moong dal (mixed)", "Turmeric", "Salt"]
+    mixed = out.ingredients[0]
+    assert mixed.her_words == "तुर, चना और मूंग, तीनों मिला के एक कटोरी"
+    assert mixed.approx == "~1 cup all together" and mixed.confidence == "med"
+
+
+def test_same_estimate_far_apart_not_merged(hindi_transcript):
+    r = Recipe(ingredients=[
+        Ingredient(name="Flour", her_words="एक मुट्ठी आटा", approx="~1 cup"),
+        Ingredient(name="Ghee", her_words="ghee daalo", approx="~1 cup"),
+    ])
+    out, _ = verify_recipe(r, hindi_transcript)
+    assert len(out.ingredients) == 2

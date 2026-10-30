@@ -19,7 +19,7 @@ import unicodedata
 from dataclasses import dataclass, field
 from difflib import SequenceMatcher
 
-from haath.models import Recipe, Transcript
+from haath.models import Ingredient, Recipe, Transcript
 
 FUZZY_THRESHOLD = 0.86
 
@@ -142,6 +142,61 @@ def says_a_number(text: str) -> bool:
     return any(ch.isdigit() for ch in text) or any(t in NUMBER_WORDS for t in toks)
 
 
+# "Together" words: "teeno mila ke ek katori" is one amount for a mix, not one amount each.
+MIX_WORDS = set(
+    "mila milake milakar milaake mix mixed together teeno tino dono sab saare ekatra "
+    "मिला मिलाके मिलाकर मिलाओ तीनों दोनों सब सारे एकत्र एकत्रित एकत्र मिळून मिसळून "
+    "ભેગા મિક્સ બધું".split()
+)
+_CONF_ORDER = {"low": 0, "med": 1, "high": 2}
+
+
+def _join_names(names: list[str]) -> str:
+    return names[0] if len(names) == 1 else ", ".join(names[:-1]) + " and " + names[-1]
+
+
+def merge_shared_amounts(index: TranscriptIndex, ingredients: list[Ingredient]) -> list[Ingredient]:
+    """Small models repeat a shared amount for every item ("~1 cup" each for tur, chana and
+    moong). Merge a run of consecutive ingredients when they have the same estimate, her words
+    for them sit within two neighbouring transcript lines, and she says a "together" word there."""
+    segs = index.transcript.segments
+    out: list[Ingredient] = []
+    i = 0
+    while i < len(ingredients):
+        j = i + 1
+        first = ingredients[i]
+        m0 = index.find(first.her_words) if first.her_words and first.approx else None
+        matches = [m0] if m0 else []
+        while m0 and j < len(ingredients):
+            nxt = ingredients[j]
+            m = index.find(nxt.her_words) if nxt.her_words else None
+            if not m or normalize(nxt.approx) != normalize(first.approx) or abs(m.seg - m0.seg) > 1:
+                break
+            matches.append(m)
+            j += 1
+        if len(matches) >= 2:
+            lo, hi = min(m.seg for m in matches), max(m.seg for m in matches)
+            window = range(lo, min(hi + 1, len(segs) - 1) + 1)
+            mix_seg = next((k for k in window if MIX_WORDS & set(tokens(segs[k].text))), None)
+            if mix_seg is not None:
+                end_seg = max(hi, mix_seg)
+                end_tok = max(t for t, tok in enumerate(index.toks) if tok.seg == end_seg) + 1
+                group = ingredients[i:j]
+                out.append(
+                    Ingredient(
+                        name=_join_names([g.name for g in group]) + " (mixed)",
+                        her_words=index.span_text(min(m.start for m in matches), end_tok),
+                        approx=f"{first.approx} all together",
+                        confidence=min((g.confidence for g in group), key=_CONF_ORDER.__getitem__),
+                    )
+                )
+                i = j
+                continue
+        out.append(first)
+        i += 1
+    return out
+
+
 @dataclass
 class VerifyReport:
     dropped: list[str] = field(default_factory=list)  # human-readable "quote: …"
@@ -239,6 +294,8 @@ def verify_recipe(recipe: Recipe, transcript: Transcript) -> tuple[Recipe, Verif
             ing.confidence = "low"  # "~to taste" is not an estimate; never show it as confident
         elif ing.confidence == "high" and not says_a_number(ing.her_words):
             ing.confidence = "med"  # "high" only when she actually said an amount
+
+    r.ingredients = merge_shared_amounts(index, r.ingredients)
 
     # The same line listed as both a tip and a warning reads as a glitch; keep it as a warning.
     warned = {normalize(w) for w in r.warnings}
