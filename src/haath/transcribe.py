@@ -62,6 +62,53 @@ def load_model(model_name: str):
         raise HaathError(f"Could not load Whisper model '{model_name}': {e}", "try a smaller one: --whisper-model small") from e
 
 
+SENTENCE_END = ("।", "॥", ".", "?", "!")
+CLAUSE_END = (",", ";", ":", "،")
+
+
+def split_long_segments(segments: list[Segment], max_sec: float = 8.0) -> list[Segment]:
+    """Whisper (with VAD) often returns 20–30 s segments holding several steps, so ▶ would start
+    every one of those steps at the same moment. Re-cut them at sentence ends — then, if still
+    long, at commas — using the word timestamps, so each line starts where she says it."""
+    out: list[Segment] = []
+
+    def cut(words: list[Word], marks: tuple[str, ...]) -> list[list[Word]]:
+        pieces, cur = [], []
+        for w in words:
+            cur.append(w)
+            if w.word.strip().endswith(marks):
+                pieces.append(cur)
+                cur = []
+        if cur:
+            pieces.append(cur)
+        return pieces
+
+    for seg in segments:
+        if seg.end - seg.start <= max_sec or len(seg.words) < 2:
+            out.append(seg)
+            continue
+        pieces: list[list[Word]] = []
+        for sentence in cut(seg.words, SENTENCE_END):
+            if sentence[-1].end - sentence[0].start > max_sec:
+                pieces.extend(cut(sentence, CLAUSE_END))
+            else:
+                pieces.append(sentence)
+        # Glue tiny fragments ("बस इतना,") onto the previous piece so lines stay readable.
+        merged: list[list[Word]] = []
+        for p in pieces:
+            if merged and (len(p) < 3 or p[-1].end - p[0].start < 0.8):
+                merged[-1] = merged[-1] + p
+            else:
+                merged.append(p)
+        for p in merged:
+            text = "".join(w.word for w in p).strip()
+            if text:
+                out.append(Segment(id=0, start=p[0].start, end=p[-1].end, text=text, words=p))
+    for i, s in enumerate(out):
+        s.id = i
+    return out
+
+
 def transcribe(
     audio: Path,
     model_name: str,
@@ -99,7 +146,7 @@ def transcribe(
             language_probability=round(float(info.language_probability or 0.0), 3),
             duration=round(duration, 2),
             whisper_model=model_name,
-            segments=[s for s in out if s.text],
+            segments=split_long_segments([s for s in out if s.text]),
         )
     finally:
         # Free RAM for Gemma: Whisper and a 4B model at once is too much for many laptops.

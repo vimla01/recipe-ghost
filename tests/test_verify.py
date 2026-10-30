@@ -86,3 +86,16 @@ def test_quotes_capped_at_three_and_deduped(hindi_transcript):
     out, _ = verify_recipe(r, hindi_transcript)
     assert len(out.quotes) == 3
     assert out.quotes[0] == "Dhakkan mat kholna beech mein"
+
+
+def test_non_numeric_estimate_is_never_confident(hindi_transcript):
+    r = Recipe(ingredients=[Ingredient(name="Salt", approx="~to taste", confidence="high"),
+                            Ingredient(name="Hing", approx="~1 pinch", confidence="med")])
+    out, _ = verify_recipe(r, hindi_transcript)
+    assert [i.confidence for i in out.ingredients] == ["low", "med"]
+
+
+def test_tip_that_is_also_a_warning_kept_once(hindi_transcript):
+    r = Recipe(tips=["Dhakkan mat kholna!", "Use desi ghee"], warnings=["dhakkan mat kholna"])
+    out, _ = verify_recipe(r, hindi_transcript)
+    assert out.tips == ["Use desi ghee"] and out.warnings == ["dhakkan mat kholna"]

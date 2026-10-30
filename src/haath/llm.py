@@ -29,21 +29,29 @@ If she did not say it, leave it out.
 2. Her measures stay exactly as she said them, in `her_words`, copied character-for-character \
 from the transcript in the same script (Devanagari stays Devanagari, Roman stays Roman). \
 Examples: "ek mutthi atta", "andaaz se namak", "थोड़ा सा हल्दी".
-3. Your estimate goes ONLY in `approx`, always starting with "~", e.g. "~1 cup / 120 g", \
-"~1/2 tsp". Set `confidence` to how sure the estimate is (low/med/high). If she said an \
-exact amount ("do cup"), confidence is high.
-4. `steps[].text` is a short, clear instruction in simple English. `her_cue` is her sensory \
+3. Your estimate goes ONLY in `approx`: a NUMBER with a kitchen unit, starting with "~", \
+e.g. "~1 cup / 120 g", "~1/2 tsp", "~2 tbsp", "~1 pinch". Never write "to taste", "a little" \
+or "plenty" — that is what her_words is for; turn it into your best numeric guess for a family \
+of four. `confidence` is "high" ONLY if she said a number ("do cup", "teen seeti"); "med" for a \
+known household measure ("ek katori", "do mutthi"); "low" for andaaz/thoda sa/khoob sara. \
+If she gave one amount for several things together ("teeno mila ke ek katori"), make ONE \
+ingredient for the mix — do not repeat the amount for each.
+4. `name` is the ingredient in simple English with her word in brackets: "Turmeric (haldi)", \
+"Semolina (sooji)".
+5. `steps[].text` is a short, clear instruction in simple English, in the order she does \
+them. Combine consecutive lines about the same action into one step. A warning is not a \
+step — put it in `warnings`. `her_cue` is her sensory \
 cue copied exactly from the transcript ("jab tak tel chhod de", "khushboo aane tak"), \
 or "" if she gave none. `start_sec` is copied exactly from the [time] label of the line where \
 she explains that step.
-5. `quotes`: up to 3 memorable lines copied exactly from the transcript — warmth, wisdom, humour.
-6. `tips` and `warnings`: only ones she actually said ("dhakkan mat kholna"). English is fine, \
-keep her phrase in brackets.
-7. `story`: one line about the dish's origin, occasion or who loved it — only if she said so, else "".
-8. `ask_next_time`: what SHE skipped or left unclear in THIS transcript, as short questions to ask \
+6. `quotes`: up to 3 memorable lines copied exactly from the transcript — warmth, wisdom, humour.
+7. `tips` and `warnings`: only ones she actually said ("dhakkan mat kholna"). English is fine, \
+keep her phrase in brackets. Each goes in one list only — a warning is not also a tip.
+8. `story`: one line about the dish's origin, occasion or who loved it — only if she said so, else "".
+9. `ask_next_time`: what SHE skipped or left unclear in THIS transcript, as short questions to ask \
 her — missing times, amounts, temperatures, how many it serves. The style, for a different dish: \
 {examples}. Never copy these; never ask about something she already said.
-9. Speech-to-text makes mistakes. In `name`, `text`, tips you may fix an obvious mistake \
+10. Speech-to-text makes mistakes. In `name`, `text`, tips you may fix an obvious mistake \
 (e.g. a misheard spice name). Do not guess beyond that. Never change her_words, her_cue or quotes.
 Reply with JSON only."""
 

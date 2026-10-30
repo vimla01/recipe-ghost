@@ -44,6 +44,7 @@ Cloud transcription apps want an account, a subscription and your grandmother's 
  │                                                                            │
  │  original audio ──► faster-whisper (large-v3-turbo, CPU int8 / CUDA)       │
  │        │               segments + word timestamps + detected language      │
+ │        │               long segments re-cut at sentence ends (। . ? !)     │
  │        │                          │                                        │
  │        │                          ▼                                        │
  │        │          Gemma via Ollama (format = Recipe JSON schema)           │
@@ -129,10 +130,13 @@ slow laptops, `--model gemma4:e2b` for a smaller/faster Gemma, `--num-ctx 8192` 
 - Long is fine. 20–40 minute recordings are split into parts and merged.
 - Afterwards, read the **Ask her next time** list — and actually ask her.
 
-**How long does it take?** On a CPU-only laptop, Whisper large-v3-turbo runs at about real time
-(a 20-minute recording ≈ 15–25 minutes). Gemma needs several GB of *free* RAM; if the laptop is
-swapping it can take much longer — close heavy apps, or use `--model gemma4:e2b --num-ctx 8192`
-and `--whisper-model small`. A GPU makes both much faster. You can close the browser while it works.
+**How long does it take?** Measured on a CPU-only laptop (Intel i5-1334U, 16 GB RAM, already
+deep in swap from other apps), for an 85-second Hindi recording: Whisper large-v3-turbo took
+~1 min to load plus ~2.3 min to transcribe; Gemma 4 e4b took ~12 min to write the card.
+Gemma needs several GB of *free* RAM — on a laptop that isn't swapping it is much faster. If it's slow:
+close heavy apps (browsers with many tabs, Docker/Kubernetes), or use `--model gemma4:e2b`,
+`--num-ctx 8192` and `--whisper-model small`. A GPU makes both much faster. You can close the
+browser tab while it works; the status shows when it's done.
 
 ## Privacy — why local and open matters
 

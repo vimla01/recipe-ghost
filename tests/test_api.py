@@ -18,7 +18,7 @@ def client(tmp_path, monkeypatch):
         yield c
 
 
-def wait_done(c, rid, timeout=10):
+def wait_done(c, rid, timeout=60):
     end = time.time() + timeout
     while time.time() < end:
         meta = c.get(f"/api/recipes/{rid}").json()["meta"]

@@ -219,6 +219,12 @@ def verify_recipe(recipe: Recipe, transcript: Transcript) -> tuple[Recipe, Verif
         ing.her_words = _check(index, ing.her_words, f"her words for {ing.name or 'ingredient'}", report)
         if ing.approx and not ing.approx.lstrip().startswith("~"):
             ing.approx = "~" + ing.approx.strip()
+        if ing.approx and not any(ch.isdigit() for ch in ing.approx) and "pinch" not in ing.approx.lower():
+            ing.confidence = "low"  # "~to taste" is not an estimate; never show it as confident
+
+    # The same line listed as both a tip and a warning reads as a glitch; keep it as a warning.
+    warned = {normalize(w) for w in r.warnings}
+    r.tips = [t for t in r.tips if normalize(t) not in warned]
 
     duration = transcript.duration or (transcript.segments[-1].end if transcript.segments else 0.0)
     for i, step in enumerate(r.steps):
