@@ -1,9 +1,9 @@
-// Haath ka Swaad — plain JS, no build step, no network beyond 127.0.0.1.
+// Haath ka Swaad: plain JS, no build step, no network beyond 127.0.0.1.
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const app = $("#app");
 
-// el("div", {class: "x", onclick: fn}, "text", child) — never uses innerHTML for data.
+// el("div", {class: "x", onclick: fn}, "text", child). Never uses innerHTML for data.
 function el(tag, attrs = {}, ...children) {
   const node = tag === "svg-use" ? svgUse(attrs.href, attrs.class) : document.createElement(tag);
   if (tag !== "svg-use") {
@@ -208,8 +208,8 @@ function recordPanel() {
     banner();
     if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
       banner("This browser can't record here.", window.isSecureContext
-        ? "use Chrome, Edge, Firefox or Safari — or upload a voice note"
-        : "phones need https: start it with  haath ui --lan  and open the https:// address — or upload a voice note");
+        ? "use Chrome, Edge, Firefox or Safari, or upload a voice note"
+        : "phones need https: start it with  haath ui --lan  and open the https:// address, or upload a voice note");
       return;
     }
     try {
@@ -266,7 +266,7 @@ function recordPanel() {
     const url = URL.createObjectURL(blob);
     preview.replaceChildren(
       el("audio", { controls: true, src: url }),
-      el("p", { class: "small muted" }, `${fmt(secs)} recorded. Listen back, then save — or record again.`),
+      el("p", { class: "small muted" }, `${fmt(secs)} recorded. Listen back, then save, or record again.`),
       el("div", { class: "row", style: "justify-content:center" },
         el("button", { class: "btn primary", onclick: () => send(blob, filename) }, "Save to the kitchen"),
         el("button", { class: "btn ghost", onclick: () => { preview.hidden = true; timer.textContent = "0:00"; } }, "Discard")));
@@ -347,7 +347,7 @@ async function renderRecipe(rid) {
           ? [el("p", { class: "big" }, el("span", { class: "busy-dot" }), STATUS[meta.status] + "…"),
              el("p", { class: "muted" }, meta.message || ""),
              el("div", { class: "progress", style: "max-width:360px;margin:10px auto" }, el("div", { style: `width:${Math.round((meta.progress || 0) * 100)}%` })),
-             el("p", { class: "small muted" }, "You can close this page — it keeps working. A 30-minute recording can take a while on a laptop.")]
+             el("p", { class: "small muted" }, "You can close this page; it keeps working. A 30-minute recording can take a while on a laptop.")]
           : [el("p", { class: "big", style: "color:var(--red)" }, meta.error || "Something went wrong."),
              meta.fix ? el("p", { class: "fix" }, "Fix: ", el("code", {}, meta.fix)) : null,
              el("div", { class: "row", style: "justify-content:center;margin-top:14px" },
@@ -366,7 +366,7 @@ async function renderRecipe(rid) {
   const stepEls = steps.map((s, i) =>
     el("li", { class: "step", "data-start": s.start_sec },
       el("button", { class: "play", type: "button", "aria-label": `Play ${who}'s voice for step ${i + 1}`, title: `Hear ${who} at ${fmt(s.start_sec)}`,
-        onclick: () => playFrom(rid, s.start_sec, `${who} — step ${i + 1}`, nextStart(i)) },
+        onclick: () => playFrom(rid, s.start_sec, `${who} · step ${i + 1}`, nextStart(i)) },
         el("span", { class: "num" }, i + 1), icon("play")),
       el("div", {},
         el("div", { class: "text" }, s.text),
@@ -375,7 +375,7 @@ async function renderRecipe(rid) {
 
   const segEls = (transcript?.segments || []).map((g) =>
     el("div", { class: "seg", "data-start": g.start, "data-end": g.end },
-      el("button", { onclick: () => playFrom(rid, g.start, `${who} — ${fmt(g.start)}`) }, fmt(g.start)),
+      el("button", { onclick: () => playFrom(rid, g.start, `${who} · ${fmt(g.start)}`) }, fmt(g.start)),
       el("span", {}, g.text)));
 
   onTimeHook = (t) => {
@@ -394,14 +394,14 @@ async function renderRecipe(rid) {
       el("span", { class: "muted" }, [meta.duration ? ` · ${fmt(meta.duration)} of her voice` : "", lang ? ` · ${lang}` : ""].join(""))),
     recipe.story ? el("p", { class: "story" }, recipe.story) : null,
     el("div", { class: "toolbar" },
-      el("button", { class: "btn primary", onclick: () => playFrom(rid, 0, `${who} — from the start`) }, icon("play"), "Hear her from the start"),
+      el("button", { class: "btn primary", onclick: () => playFrom(rid, 0, `${who} · from the start`) }, icon("play"), "Hear her from the start"),
       el("a", { class: "btn", href: `#/r/${rid}/edit` }, "Edit"),
       el("button", { class: "btn ghost", onclick: () => window.print() }, "Print"),
       el("button", { class: "btn ghost", title: `Re-run ${STATUS_INFO.model || "the model"} on the same transcript`, onclick: () => redo(rid, false, meta.edited) }, "Re-write"),
       el("button", { class: "btn ghost", onclick: () => trash(rid, meta) }, "Delete")),
     meta.dropped
       ? el("details", { class: "guard" },
-          el("summary", {}, `✓ Checked against her recording — ${meta.dropped} line${meta.dropped > 1 ? "s" : ""} the model wrote but she never said ${meta.dropped > 1 ? "were" : "was"} removed.`),
+          el("summary", {}, `✓ Checked against her recording: ${meta.dropped} line${meta.dropped > 1 ? "s" : ""} the model wrote but she never said ${meta.dropped > 1 ? "were" : "was"} removed.`),
           el("ul", {}, meta.dropped_items.map((d) => el("li", {}, d))))
       : el("div", { class: "guard" }, "✓ Every quote and measure below was checked against her recording."),
 
@@ -410,8 +410,8 @@ async function renderRecipe(rid) {
         el("li", { class: "ing" },
           g.her_words ? el("div", { class: "her" }, g.her_words) : null,
           el("div", { class: "name" }, g.name),
-          g.approx ? el("div", { class: "approx", title: `Approximate — ${g.confidence} confidence` }, g.approx, " approx.", el("span", { class: "conf " + g.confidence })) : null))),
-      el("p", { class: "small muted", style: "margin-top:8px" }, "Big writing is how she said it. Small measures are estimates — trust her words first.")),
+          g.approx ? el("div", { class: "approx", title: `Approximate, ${g.confidence} confidence` }, g.approx, " approx.", el("span", { class: "conf " + g.confidence })) : null))),
+      el("p", { class: "small muted", style: "margin-top:8px" }, "Big writing is how she said it. Small measures are estimates, so trust her words first.")),
 
     section("Method", "diya", el("ol", { class: "steps" }, stepEls),
       el("p", { class: "small muted" }, "Press ▶ to hear her explain that step in her own voice.")),
@@ -424,12 +424,12 @@ async function renderRecipe(rid) {
       : null,
 
     recipe.quotes.length
-      ? section("In her words", null, el("div", { class: "quotes" }, recipe.quotes.map((q) => el("blockquote", {}, q, el("cite", {}, "— " + who)))))
+      ? section("In her words", null, el("div", { class: "quotes" }, recipe.quotes.map((q) => el("blockquote", {}, q, el("cite", {}, "· " + who)))))
       : null,
 
     recipe.ask_next_time.length
       ? section("Ask her next time", null, el("ul", { class: "asks" }, recipe.ask_next_time.map((q) => el("li", {}, q))),
-          el("p", { class: "small muted" }, "Little gaps in the recipe. Ask while you still can — then fix the card with Edit."))
+          el("p", { class: "small muted" }, "Little gaps in the recipe. Ask while you still can, then fix the card with Edit."))
       : null,
 
     transcript
@@ -476,7 +476,7 @@ async function renderEdit(rid) {
   const area = (obj, key, attrs = {}) => el("textarea", { oninput: (e) => (obj[key] = e.target.value), ...attrs }, obj[key] ?? "");
   const listArea = (key, label, hint) => {
     const t = el("textarea", { id: "f-" + key, oninput: (e) => (r[key] = e.target.value.split("\n").map((s) => s.trim()).filter(Boolean)) }, r[key].join("\n"));
-    return el("div", { class: "field" }, el("label", { for: "f-" + key }, label, el("span", { class: "muted" }, " — " + hint)), t);
+    return el("div", { class: "field" }, el("label", { for: "f-" + key }, label, el("span", { class: "muted" }, " · " + hint)), t);
   };
 
   const ingBox = el("div", { class: "rowset" });
@@ -510,7 +510,7 @@ async function renderEdit(rid) {
   app.replaceChildren(el("div", { class: "recipe edit" },
     el("a", { class: "back", href: `#/r/${rid}` }, "← Back to the card"),
     el("article", { class: "sheet" },
-      el("p", { class: "kicker" }, "Fix anything by hand — you know her better than the machine does"),
+      el("p", { class: "kicker" }, "Fix anything by hand. You know her better than the machine does"),
       el("h1", { class: "dish" }, "Edit recipe"),
       el("div", { class: "row", style: "margin-top:16px" },
         el("div", { class: "field" }, el("label", {}, "Dish"), input(r, "dish")),
@@ -536,7 +536,7 @@ async function renderEdit(rid) {
 (async () => {
   try {
     STATUS_INFO = await api("/api/status");
-    if (STATUS_INFO.mock) banner("Mock mode: recordings use a sample Dal Baati transcript and reply — no Whisper or Ollama needed.");
+    if (STATUS_INFO.mock) banner("Mock mode: recordings use a sample Dal Baati transcript and reply, no Whisper or Ollama needed.");
     else {
       const { checks } = await api("/api/doctor");
       const bad = checks.find((c) => !c.ok && c.required);

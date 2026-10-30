@@ -68,8 +68,8 @@ CLAUSE_END = (",", ";", ":", "،")
 
 def split_long_segments(segments: list[Segment], max_sec: float = 8.0) -> list[Segment]:
     """Whisper (with VAD) often returns 20–30 s segments holding several steps, so ▶ would start
-    every one of those steps at the same moment. Re-cut them at sentence ends — then, if still
-    long, at commas — using the word timestamps, so each line starts where she says it."""
+    every one of those steps at the same moment. Re-cut them at sentence ends (then, if still
+    long, at commas) using the word timestamps, so each line starts where she says it."""
     out: list[Segment] = []
 
     def cut(words: list[Word], marks: tuple[str, ...]) -> list[list[Word]]:

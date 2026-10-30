@@ -104,7 +104,7 @@ def create_app(settings: Settings, start_worker: bool = True) -> FastAPI:
     def save_recipe(rid: str, body: dict):
         meta = _get(rid)
         if meta.status not in ("done", "error"):
-            raise HaathError("Still being written — wait until it's done before editing.", "")
+            raise HaathError("Still being written. Wait until it's done before editing.", "")
         try:
             r = Recipe.model_validate(body)
         except ValidationError as e:
@@ -152,6 +152,8 @@ def serve(settings: Settings, port: int = DEFAULT_PORT, open_browser: bool = Tru
 
     host = "0.0.0.0" if lan else "127.0.0.1"
     with socket.socket() as probe:
+        # Same option uvicorn uses, so a just-closed haath ui (port in TIME_WAIT) isn't "busy".
+        probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
             probe.bind((host, port))
         except OSError as e:
@@ -170,7 +172,7 @@ def serve(settings: Settings, port: int = DEFAULT_PORT, open_browser: bool = Tru
         print("  Mock mode: recordings use a sample transcript + reply (no Whisper/Ollama).")
     if lan:
         print(f"  On your Wi-Fi (phone on the kitchen counter): https://{ip}:{port}/")
-        print("  The phone will warn about the certificate once — it's this laptop's own, made just now.")
+        print("  The phone will warn about the certificate once; it's this laptop's own, made just now.")
         print("  Tap Advanced → Proceed, then the Record button works on the phone too.")
         print("  Anyone on this Wi-Fi can open the page while it runs; stop with Ctrl+C when done.")
     print("  Press Ctrl+C to close.\n", flush=True)

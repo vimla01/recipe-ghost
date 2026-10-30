@@ -52,14 +52,14 @@ def check_whisper(settings: Settings, download: bool = False) -> list[Check]:
         import faster_whisper  # noqa: F401
         import av
 
-        checks.append(Check("faster-whisper + PyAV", True, f"PyAV {av.__version__} decodes webm/m4a/opus/mp3 — no ffmpeg needed"))
+        checks.append(Check("faster-whisper + PyAV", True, f"PyAV {av.__version__} decodes webm/m4a/opus/mp3, no ffmpeg needed"))
     except ImportError as e:
         return [Check("faster-whisper", False, str(e), "run: pip install faster-whisper   (or reinstall: uv tool install .)")]
 
     from haath.transcribe import download_whisper, pick_device, whisper_cached
 
     device, compute = pick_device()
-    checks.append(Check("Compute device", True, f"{device} ({compute})" + ("" if device == "cuda" else " — fine; a GPU is just faster"), required=False))
+    checks.append(Check("Compute device", True, f"{device} ({compute})" + ("" if device == "cuda" else " (fine; a GPU is just faster)"), required=False))
 
     if not whisper_cached(settings.whisper_model) and download:
         print(f"  … downloading Whisper '{settings.whisper_model}' (one time, ~1.6 GB for large-v3-turbo, ~0.5 GB for small)", flush=True)

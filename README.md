@@ -2,12 +2,12 @@
 
 **For every recipe that only exists in her hands.**
 
-Record Mummy, Nani or Dadi cooking while she explains in Hindi, Marathi, Gujarati or Hinglish —
-*"thoda sa haldi, jab tak khushboo na aaye"* — and get back a recipe card that keeps **her words**,
+Record Mummy, Nani or Dadi cooking while she explains in Hindi, Marathi, Gujarati or Hinglish
+(*"thoda sa haldi, jab tak khushboo na aaye"*), and get back a recipe card that keeps **her words**,
 adds **approximate measures** beside them, and lets you press ▶ on any step to **hear her voice**
 explain it. Everything runs on your laptop. Nothing leaves it.
 
-> Built for the DEV Hacktoberfest Open-Source AI Challenge, Week 4 — *Ghost in the Machine*.
+> Built for the DEV Hacktoberfest Open-Source AI Challenge, Week 4: *Ghost in the Machine*.
 > Día de los Muertos and Diwali both light a lamp for the people who came before us.
 > This is a small diya for the recipes they carried in their hands.
 
@@ -17,7 +17,7 @@ explain it. Everything runs on your laptop. Nothing leaves it.
 
 The best food in most Indian families was never written down. It lives in *andaaz*: "ek mutthi atta",
 "namak andaaz se", "jab tak tel chhod de". When you ask for the recipe you get a shrug and
-"bas, dekh ke seekh lo" — just watch and learn. And one day there is no one left to watch.
+"bas, dekh ke seekh lo" (just watch and learn). And one day there is no one left to watch.
 
 Recording a video helps, but a 40-minute video is not a recipe. Typing it up loses her voice.
 Cloud transcription apps want an account, a subscription and your grandmother's voice on their servers.
@@ -73,7 +73,7 @@ Each recipe lives in its own folder:
 
 ```
 ~/HaathKaSwaad/
-├── book.html                    # haath book — opens offline by double-click
+├── book.html                    # haath book: opens offline by double-click
 └── recipes/20261030-dal-baati-a734/
     ├── original.webm            # her voice, untouched
     ├── voice.m4a                # seekable copy for ▶ playback
@@ -86,16 +86,16 @@ All writes are atomic (temp file + rename), so a closed laptop lid never leaves 
 
 ## Setup
 
-You need Python 3.11+ and about 8 GB of free disk (models). No ffmpeg needed — audio decoding
+You need Python 3.11+ and about 8 GB of free disk (models). No ffmpeg needed: audio decoding
 comes bundled with faster-whisper (PyAV).
 
 ```bash
-# 1. Ollama — https://ollama.com/download  (Linux: curl -fsSL https://ollama.com/install.sh | sh)
+# 1. Ollama: https://ollama.com/download  (Linux: curl -fsSL https://ollama.com/install.sh | sh)
 ollama pull gemma4:e4b
 
 # 2. Haath ka Swaad (from this folder)
 pipx install .               # or: uv tool install .
-# Ubuntu/Debian: plain `pip install .` is blocked (PEP 668) — use pipx (sudo apt install pipx)
+# Ubuntu/Debian: plain `pip install .` is blocked (PEP 668), use pipx (sudo apt install pipx)
 # Then run once and open a new terminal so `haath` is on your PATH: pipx ensurepath
 
 # 3. One-time Whisper download (~1.6 GB), then check everything
@@ -108,7 +108,7 @@ haath ui
 After step 3 you can turn Wi-Fi off. `haath doctor` tells you exactly what's missing and how to fix it:
 
 ```
-  ✓ faster-whisper + PyAV: PyAV 15.1.0 decodes webm/m4a/opus/mp3 — no ffmpeg needed
+  ✓ faster-whisper + PyAV: PyAV 15.1.0 decodes webm/m4a/opus/mp3, no ffmpeg needed
   ✓ Whisper model large-v3-turbo: downloaded (works offline)
   ✗ Ollama server: not reachable at http://localhost:11434
       → run: ollama serve
@@ -120,12 +120,12 @@ After step 3 you can turn Wi-Fi off. `haath doctor` tells you exactly what's mis
 
 | Command | What it does |
 |---|---|
-| `haath ui [archive]` | Opens http://127.0.0.1:8767 — record, watch status, read and edit cards |
+| `haath ui [archive]` | Opens http://127.0.0.1:8767: record, watch status, read and edit cards |
 | `haath ui --lan` | Also serves https on your Wi-Fi, so the phone on the kitchen counter can record too |
 | `haath add voice.m4a --cook "Mummy" --dish "Dal Baati"` | Add an existing phone voice note |
 | `haath list` | All recipes with status |
 | `haath redo <id>` | Re-run Gemma (e.g. after `--model` change); `--full` also re-transcribes |
-| `haath book` | Writes `book.html` — every recipe, printable, plays her voice offline |
+| `haath book` | Writes `book.html`: every recipe, printable, plays her voice offline |
 | `haath doctor` | Checks Whisper model, Ollama and the Gemma model |
 
 Useful flags (any command): `--lang hi|mr|gu|en` to force the language, `--whisper-model small` for
@@ -138,22 +138,22 @@ slow laptops, `--model gemma4:e2b` for a smaller/faster Gemma, `--num-ctx 8192` 
 - Phone on the counter? Run `haath ui --lan`, open the `https://192.168.…` address it prints on the
   phone, accept the one-time certificate warning (it's your laptop's own), and press Record.
 - Put the phone/laptop about a metre away, not next to the pressure cooker or exhaust fan.
-- Ask her to *say* what she's doing: "ab kitna daala?", "kab tak?" — the card can only use what she says.
+- Ask her to *say* what she's doing: "ab kitna daala?", "kab tak?" The card can only use what she says.
 - Long is fine. 20–40 minute recordings are split into parts and merged.
-- Afterwards, read the **Ask her next time** list — and actually ask her.
+- Afterwards, read the **Ask her next time** list, and actually ask her.
 
 **How long does it take?** Measured on a CPU-only laptop (Intel i5-1334U, 16 GB RAM, already
 deep in swap from other apps), for an 85-second Hindi recording: Whisper large-v3-turbo took
 ~1 min to load plus ~2.3 min to transcribe; Gemma 4 e4b took ~12 min to write the card.
-Gemma needs several GB of *free* RAM — on a laptop that isn't swapping it is much faster. If it's slow:
+Gemma needs several GB of *free* RAM; on a laptop that isn't swapping it is much faster. If it's slow:
 close heavy apps (browsers with many tabs, Docker/Kubernetes), or use `--model gemma4:e2b`,
 `--num-ctx 8192` and `--whisper-model small`. A GPU makes both much faster. You can close the
 browser tab while it works; the status shows when it's done.
 
-## Privacy — why local and open matters
+## Privacy: why local and open matters
 
 - **Her voice never touches a server.** Recordings of elders, family stories, a grandmother laughing
-  at her own joke — that is about as personal as data gets. Here it stays in a folder on your disk.
+  at her own joke: that is about as personal as data gets. Here it stays in a folder on your disk.
 - **Works with Wi-Fi off.** After the one-time model downloads, there is no network access at all.
   The UI binds to 127.0.0.1 and uses no CDNs; fonts are bundled.
 - **No subscription that can disappear.** No account, no API key, no company that can shut down and
@@ -165,11 +165,11 @@ browser tab while it works; the status shows when it's done.
 
 - **Accents and dialects.** Whisper is good at Hindi and decent at Marathi/Gujarati, but strong
   regional dialects, Marwari/Bhojpuri words and fast code-switching will produce mistakes.
-  Use **Edit** to fix them — you know her better than the machine does.
+  Use **Edit** to fix them. You know her better than the machine does.
 - **Noisy kitchens.** Pressure-cooker whistles, mixer-grinders and exhaust fans hurt accuracy.
 - **Shared amounts.** "Teeno dal mila ke ek katori" is one katori for the mix. The guard merges
   such items into one line ("~1 cup all together") when she says a "together" word (mila ke,
-  teeno, dono…); if she doesn't, they may show as ~1 cup each — her words beside them show the truth.
+  teeno, dono…); if she doesn't, they may show as ~1 cup each, but her words beside them show the truth.
 - **Approximate measures are estimates.** "Ek mutthi" depends on whose fist. The `approx` column is
   Gemma's guess and is always marked `~`. Her words come first.
 - **The guard checks wording, not meaning.** It removes quotes and measures that aren't in the
@@ -185,5 +185,5 @@ python -m venv .venv && .venv/bin/pip install -e ".[dev]"
 
 ## License
 
-MIT — see [LICENSE](LICENSE). Bundled fonts (Kalam, Tiro Devanagari Hindi, Mukta) are under the
+MIT, see [LICENSE](LICENSE). Bundled fonts (Kalam, Tiro Devanagari Hindi, Mukta) are under the
 SIL Open Font License 1.1, see `src/haath/static/fonts/`.

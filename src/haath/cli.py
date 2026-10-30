@@ -76,7 +76,7 @@ def cmd_add(args) -> int:
 def _print_done(archive: Archive, rid: str) -> None:
     meta = archive.load_meta(rid)
     recipe = archive.load_recipe(rid)
-    print(f"\n  {recipe.dish or 'Recipe'} — as told by {recipe.cook or 'her'}")
+    print(f"\n  {recipe.dish or 'Recipe'}, as told by {recipe.cook or 'her'}")
     print(f"  {len(recipe.ingredients)} ingredients, {len(recipe.steps)} steps, {len(recipe.ask_next_time)} questions for next time")
     if meta.dropped:
         print(f"  Guard removed {meta.dropped} line(s) the model wrote that she never said:")
@@ -117,7 +117,7 @@ def cmd_book(args) -> int:
 
     s = _settings(args)
     out = write_book(Archive(s.archive), Path(args.out).expanduser() if args.out else None)
-    print(f"Wrote {out}\nDouble-click it to open — it works offline. Keep it next to the recipes/ folder so her voice plays.")
+    print(f"Wrote {out}\nDouble-click it to open; it works offline. Keep it next to the recipes/ folder so her voice plays.")
     return 0
 
 
@@ -125,12 +125,12 @@ def cmd_doctor(args) -> int:
     from haath.doctor import print_report, run_checks
 
     s = _settings(args)
-    print(f"haath {__version__} — checking what's needed to run fully offline\n")
+    print(f"haath {__version__}: checking what's needed to run fully offline\n")
     return 0 if print_report(run_checks(s, download=args.download)) else 1
 
 
 def build_parser() -> argparse.ArgumentParser:
-    ap = argparse.ArgumentParser(prog="haath", description="Haath ka Swaad — for every recipe that only exists in her hands.")
+    ap = argparse.ArgumentParser(prog="haath", description="Haath ka Swaad: for every recipe that only exists in her hands.")
     ap.add_argument("--version", action="version", version=f"haath {__version__}")
     sub = ap.add_subparsers(dest="cmd", required=True)
 

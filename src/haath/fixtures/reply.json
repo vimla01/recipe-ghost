@@ -1,7 +1,7 @@
 {
   "dish": "Dal Baati",
   "cook": "Mummy",
-  "story": "Nanaji's favourite — made every Diwali.",
+  "story": "Nanaji's favourite, made every Diwali.",
   "ingredients": [
     {"name": "Wheat flour (atta)", "her_words": "एक बड़ा कटोरा आटा", "approx": "~2 cups / 250 g", "confidence": "med"},
     {"name": "Semolina (sooji)", "her_words": "दो मुट्ठी सूजी", "approx": "~1/3 cup / 50 g", "confidence": "med"},
@@ -33,7 +33,7 @@
     {"text": "Finish with hara dhaniya and a little nimbu.", "her_cue": "", "start_sec": 124}
   ],
   "tips": [
-    "Be generous with ghee in the dough (khoob saara ghee) — the moyan makes the baati crisp.",
+    "Be generous with ghee in the dough (khoob saara ghee); the moyan makes the baati crisp.",
     "A tandoor is even better than the oven."
   ],
   "warnings": [

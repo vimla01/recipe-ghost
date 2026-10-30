@@ -50,7 +50,7 @@ class Step(_Strict):
 class Recipe(_Strict):
     dish: str = Field("", description="Dish name.")
     cook: str = Field("", description="Who is cooking, e.g. 'Mummy', 'Nani'.")
-    story: str = Field("", description="One line about the dish's origin, occasion or who loved it — only if she said so. Otherwise empty.")
+    story: str = Field("", description="One line about the dish's origin, occasion or who loved it, only if she said so. Otherwise empty.")
     ingredients: list[Ingredient] = Field(default_factory=list)
     steps: list[Step] = Field(default_factory=list)
     tips: list[str] = Field(default_factory=list, description="Tips she mentioned.")

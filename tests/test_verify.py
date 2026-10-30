@@ -140,3 +140,12 @@ def test_same_estimate_far_apart_not_merged(hindi_transcript):
     ])
     out, _ = verify_recipe(r, hindi_transcript)
     assert len(out.ingredients) == 2
+
+
+def test_card_text_has_no_em_dashes_but_her_words_untouched(hindi_transcript):
+    r = Recipe(story="Nanaji loved it — every Diwali", steps=[Step(text="Fry — until golden", her_cue="tel chhod de")],
+               tips=["Use ghee—lots"], quotes=["Dhakkan mat kholna beech mein"])
+    out, _ = verify_recipe(r, hindi_transcript)
+    assert out.story == "Nanaji loved it, every Diwali"
+    assert out.steps[0].text == "Fry, until golden" and out.tips == ["Use ghee, lots"]
+    assert out.quotes == ["Dhakkan mat kholna beech mein"]

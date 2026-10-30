@@ -23,7 +23,7 @@ You turn a home cook's spoken explanation into a family recipe card. She speaks 
 Hindi, Marathi, Gujarati, English or a mix (Hinglish). The transcript comes from \
 speech-to-text, one line per segment, each starting with its time in seconds: [83.4] ...
 
-RULES — follow all of them:
+RULES (follow all of them):
 1. Use ONLY what is in the transcript. Never invent an ingredient, step, tip, story or quote. \
 If she did not say it, leave it out.
 2. Her measures stay exactly as she said them, in `her_words`, copied character-for-character \
@@ -31,25 +31,25 @@ from the transcript in the same script (Devanagari stays Devanagari, Roman stays
 Examples: "ek mutthi atta", "andaaz se namak", "थोड़ा सा हल्दी".
 3. Your estimate goes ONLY in `approx`: a NUMBER with a kitchen unit, starting with "~", \
 e.g. "~1 cup / 120 g", "~1/2 tsp", "~2 tbsp", "~1 pinch". Never write "to taste", "a little" \
-or "plenty" — that is what her_words is for; turn it into your best numeric guess for a family \
+or "plenty"; that is what her_words is for; turn it into your best numeric guess for a family \
 of four. `confidence` is "high" ONLY if she said a number ("do cup", "teen seeti"); "med" for a \
 known household measure ("ek katori", "do mutthi"); "low" for andaaz/thoda sa/khoob sara. \
 If she gave one amount for several things together ("teeno mila ke ek katori"), make ONE \
-ingredient for the mix — do not repeat the amount for each.
+ingredient for the mix; do not repeat the amount for each.
 4. `name` is the ingredient in simple English with her word in brackets: "Turmeric (haldi)", \
 "Semolina (sooji)".
 5. `steps[].text` is a short, clear instruction in simple English, in the order she does \
 them. Combine consecutive lines about the same action into one step. A warning is not a \
-step — put it in `warnings`. `her_cue` is her sensory \
+step; put it in `warnings`. `her_cue` is her sensory \
 cue copied exactly from the transcript ("jab tak tel chhod de", "khushboo aane tak"), \
 or "" if she gave none. `start_sec` is copied exactly from the [time] label of the line where \
 she explains that step.
-6. `quotes`: up to 3 memorable lines copied exactly from the transcript — warmth, wisdom, humour.
+6. `quotes`: up to 3 memorable lines copied exactly from the transcript: warmth, wisdom, humour.
 7. `tips` and `warnings`: only ones she actually said ("dhakkan mat kholna"). English is fine, \
-keep her phrase in brackets. Each goes in one list only — a warning is not also a tip.
-8. `story`: one line about the dish's origin, occasion or who loved it — only if she said so, else "".
+keep her phrase in brackets. Each goes in one list only; a warning is not also a tip.
+8. `story`: one line about the dish's origin, occasion or who loved it, only if she said so, else "".
 9. `ask_next_time`: what SHE skipped or left unclear in THIS transcript, as short questions to ask \
-her — missing times, amounts, temperatures, how many it serves. The style, for a different dish: \
+her: missing times, amounts, temperatures, how many it serves. The style, for a different dish: \
 {examples}. Never copy these; never ask about something she already said.
 10. Speech-to-text makes mistakes. In `name`, `text`, tips you may fix an obvious mistake \
 (e.g. a misheard spice name). Do not guess beyond that. Never change her_words, her_cue or quotes.
@@ -277,7 +277,7 @@ def write_recipe(
 ) -> Recipe:
     """Run Gemma over the transcript (chunked if needed) and return the merged, un-verified Recipe."""
     if not transcript.segments:
-        raise HaathError("The transcript is empty — no speech was heard in the recording.", "check the mic, then record again closer to her (phone ~1 m away)")
+        raise HaathError("The transcript is empty: no speech was heard in the recording.", "check the mic, then record again closer to her (phone ~1 m away)")
     chunks = chunk_segments(transcript.segments, num_ctx)
     if ask is None:
         client = make_client(host)

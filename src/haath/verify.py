@@ -15,6 +15,7 @@ text, so what is shown is always what was heard.
 
 from __future__ import annotations
 
+import re
 import unicodedata
 from dataclasses import dataclass, field
 from difflib import SequenceMatcher
@@ -153,6 +154,10 @@ _CONF_ORDER = {"low": 0, "med": 1, "high": 2}
 
 def _join_names(names: list[str]) -> str:
     return names[0] if len(names) == 1 else ", ".join(names[:-1]) + " and " + names[-1]
+
+
+def no_em_dash(text: str) -> str:
+    return re.sub(r"\s*—\s*", ", ", text or "").strip(", ")
 
 
 def merge_shared_amounts(index: TranscriptIndex, ingredients: list[Ingredient]) -> list[Ingredient]:
@@ -296,6 +301,14 @@ def verify_recipe(recipe: Recipe, transcript: Transcript) -> tuple[Recipe, Verif
             ing.confidence = "med"  # "high" only when she actually said an amount
 
     r.ingredients = merge_shared_amounts(index, r.ingredients)
+
+    # House style: no em dashes in the card's own (English) text. Her words are left as heard.
+    r.story = no_em_dash(r.story)
+    for ing in r.ingredients:
+        ing.name, ing.approx = no_em_dash(ing.name), no_em_dash(ing.approx)
+    for step in r.steps:
+        step.text = no_em_dash(step.text)
+    r.tips, r.warnings, r.ask_next_time = ([no_em_dash(x) for x in xs] for xs in (r.tips, r.warnings, r.ask_next_time))
 
     # The same line listed as both a tip and a warning reads as a glitch; keep it as a warning.
     warned = {normalize(w) for w in r.warnings}

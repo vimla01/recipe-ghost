@@ -147,7 +147,7 @@ def render_recipe(meta: Meta, r: Recipe, audio_src: str) -> str:
             out.append('<div class="note w"><h4>Careful!</h4><ul>' + "".join(f"<li>{e(t)}</li>" for t in r.warnings) + "</ul></div>")
         out.append("</div>")
     for q in r.quotes:
-        out.append(f"<blockquote>{e(q)} <small>— {who}</small></blockquote>")
+        out.append(f"<blockquote>{e(q)} <small>· {who}</small></blockquote>")
     if r.ask_next_time:
         out.append('<h3>Ask her next time</h3><ul class="asks">' + "".join(f"<li>{e(q)}</li>" for q in r.ask_next_time) + "</ul>")
     out.append(f'<p class="foot">Recorded {e(meta.created[:10])} · kept in recipes/{e(meta.id)}/</p></section>')
@@ -166,17 +166,17 @@ def render_book(archive: Archive, audio_url: Callable[[str], str], inline_assets
     cover = (
         '<section class="page cover">'
         f'<div class="flowers">{MARIGOLD * 5}</div>'
-        '<h1 lang="hi">हाथ का स्वाद</h1><div class="en">Haath ka Swaad — the family kitchen book</div>'
+        '<h1 lang="hi">हाथ का स्वाद</h1><div class="en">Haath ka Swaad · the family kitchen book</div>'
         '<div class="tag">For every recipe that only exists in her hands.</div>'
         + (f'<p class="by">with {escape(", ".join(cooks))}</p>' if cooks else "")
-        + (f'<ul class="toc">{toc}</ul>' if entries else '<p class="by">No finished recipes yet — record one with <b>haath ui</b>.</p>')
+        + (f'<ul class="toc">{toc}</ul>' if entries else '<p class="by">No finished recipes yet. Record one with <b>haath ui</b>.</p>')
         + f'<p class="foot">Made {datetime.now():%d %B %Y} · everything in this book stayed on the family laptop</p></section>'
     )
     pages = "\n".join(render_recipe(m, r, audio_url(m.id)) for m, r in entries)
     return (
         '<!doctype html><html lang="en"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width, initial-scale=1">'
-        f"<title>Haath ka Swaad — Kitchen book</title>{fonts}<style>{BOOK_CSS}</style></head><body>"
+        f"<title>Haath ka Swaad · Kitchen book</title>{fonts}<style>{BOOK_CSS}</style></head><body>"
         '<div class="bar">The family kitchen book · ▶ plays her voice · <button onclick="print()">Print / save as PDF</button></div>'
         f"{cover}\n{pages}<script>{BOOK_JS}</script></body></html>"
     )
